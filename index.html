@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Macro Fundamentals Dashboard</title>
+    <title>Professional Macro Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -34,7 +34,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -69,17 +69,20 @@
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 10px;
         }
 
         .nav button {
-            padding: 10px 20px;
+            padding: 10px 16px;
             border: 1px solid var(--border-color);
             background-color: var(--bg-card);
             color: var(--text-secondary);
             cursor: pointer;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .nav button:hover {
@@ -123,7 +126,7 @@
         }
 
         .card h3 {
-            font-size: 16px;
+            font-size: 14px;
             margin-bottom: 15px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -143,13 +146,13 @@
         }
 
         .label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
         .value {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             font-family: 'Courier New', monospace;
         }
@@ -182,7 +185,7 @@
             text-align: left;
             font-weight: 600;
             color: var(--text-secondary);
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             border-bottom: 1px solid var(--border-color);
         }
@@ -201,18 +204,8 @@
             border-bottom: none;
         }
 
-        .chart-container {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            position: relative;
-            height: 350px;
-        }
-
         .section-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
             margin-bottom: 20px;
             color: var(--text-primary);
@@ -220,7 +213,7 @@
 
         .news-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
             gap: 20px;
         }
 
@@ -228,7 +221,7 @@
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-left: 4px solid var(--accent-blue);
-            padding: 20px;
+            padding: 18px;
             border-radius: 8px;
             transition: all 0.2s;
         }
@@ -245,6 +238,11 @@
             border-left-color: var(--accent-amber);
         }
 
+        .news-item.financial-juice {
+            border-left-color: #a78bfa;
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.05) 0%, transparent 100%);
+        }
+
         .news-header {
             display: flex;
             justify-content: space-between;
@@ -254,7 +252,7 @@
         }
 
         .news-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             line-height: 1.4;
             margin: 0;
@@ -264,7 +262,7 @@
             display: inline-block;
             padding: 4px 10px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
             white-space: nowrap;
@@ -297,27 +295,51 @@
             border-radius: 3px;
             font-weight: 600;
             text-transform: uppercase;
+            font-size: 10px;
         }
 
         .news-summary {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
             line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .news-points {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 10px 0;
+            padding-left: 15px;
+        }
+
+        .news-points li {
+            margin-bottom: 5px;
+            list-style-type: disc;
         }
 
         .news-source {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
-            margin-top: 12px;
-            padding-top: 12px;
+            margin-top: 10px;
+            padding-top: 10px;
             border-top: 1px solid var(--border-color);
+        }
+
+        .chart-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            height: 300px;
         }
 
         footer {
             text-align: center;
             padding: 20px;
             color: var(--text-muted);
-            font-size: 12px;
+            font-size: 11px;
             border-top: 1px solid var(--border-color);
             margin-top: 40px;
         }
@@ -344,100 +366,120 @@
 <body>
     <div class="container">
         <header>
-            <h1>🌍 Macro Fundamentals Dashboard</h1>
-            <p>Real-time G10 + News + Calendar + Commodities</p>
+            <h1>📊 Professional Macro Dashboard</h1>
+            <p>G10 Central Banks | Inflation | Labour Markets | PMI | Commodities | FX | Financial Juice</p>
             <div class="timestamp">Last updated: <span id="lastUpdate">--:--</span></div>
         </header>
 
         <div class="nav">
             <button class="nav-btn active" onclick="switchTab('overview')">Overview</button>
-            <button class="nav-btn" onclick="switchTab('news')">📢 News</button>
-            <button class="nav-btn" onclick="switchTab('rates')">Rates</button>
+            <button class="nav-btn" onclick="switchTab('inflation')">Inflation (CPI/PPI/3M)</button>
+            <button class="nav-btn" onclick="switchTab('labour')">Labour Market (NFP)</button>
+            <button class="nav-btn" onclick="switchTab('pmi')">PMI</button>
             <button class="nav-btn" onclick="switchTab('fx')">FX Pairs</button>
-            <button class="nav-btn" onclick="switchTab('commodities')">Commodities</button>
-            <button class="nav-btn" onclick="switchTab('calendar')">📅 Calendar</button>
+            <button class="nav-btn" onclick="switchTab('financial-juice')">💜 Financial Juice</button>
+            <button class="nav-btn" onclick="switchTab('news')">News</button>
+            <button class="nav-btn" onclick="switchTab('calendar')">Calendar</button>
         </div>
 
         <!-- OVERVIEW TAB -->
         <div id="overview" class="tab-content active">
-            <h2 class="section-title">Central Banks & Inflation</h2>
+            <h2 class="section-title">Central Banks & Key Rates</h2>
             <div class="grid" id="ratesGrid"></div>
 
-            <h2 class="section-title">Major FX Pairs</h2>
+            <h2 class="section-title">Headline Inflation (YoY)</h2>
+            <div class="grid" id="inflationGrid"></div>
+
+            <h2 class="section-title">Labour Markets (Key Metrics)</h2>
+            <div class="grid" id="labourGrid"></div>
+        </div>
+
+        <!-- INFLATION TAB -->
+        <div id="inflation" class="tab-content">
+            <h2 class="section-title">Detailed Inflation Analysis</h2>
+            <table id="inflationTable">
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>CPI YoY</th>
+                        <th>CPI MoM</th>
+                        <th>CPI 3M Ann.</th>
+                        <th>PPI YoY</th>
+                        <th>Core CPI</th>
+                        <th>Key Component</th>
+                    </tr>
+                </thead>
+                <tbody id="inflationBody"></tbody>
+            </table>
+        </div>
+
+        <!-- LABOUR MARKET TAB -->
+        <div id="labour" class="tab-content">
+            <h2 class="section-title">Labour Market Dashboard</h2>
+            <table id="labourTable">
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Unemployment</th>
+                        <th>NFP / Change</th>
+                        <th>Wage Growth YoY</th>
+                        <th>Participation Rate</th>
+                        <th>Last Report</th>
+                    </tr>
+                </thead>
+                <tbody id="labourBody"></tbody>
+            </table>
+        </div>
+
+        <!-- PMI TAB -->
+        <div id="pmi" class="tab-content">
+            <h2 class="section-title">PMI Indices (>50 = Expansion)</h2>
+            <table id="pmiTable">
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Manufacturing PMI</th>
+                        <th>Services PMI</th>
+                        <th>Composite PMI</th>
+                        <th>Last Report</th>
+                    </tr>
+                </thead>
+                <tbody id="pmiBody"></tbody>
+            </table>
+
+            <h2 class="section-title" style="margin-top: 30px;">PMI Trend</h2>
+            <div class="chart-container">
+                <canvas id="pmiChart"></canvas>
+            </div>
+        </div>
+
+        <!-- FX TAB -->
+        <div id="fx" class="tab-content">
+            <h2 class="section-title">FX Pairs (Policy Divergence Trades)</h2>
             <table id="fxTable">
                 <thead>
                     <tr>
                         <th>Pair</th>
                         <th>Rate</th>
                         <th>Change</th>
+                        <th>Macro Driver</th>
                     </tr>
                 </thead>
-                <tbody id="fxTableBody"></tbody>
+                <tbody id="fxBody"></tbody>
             </table>
+        </div>
 
-            <h2 class="section-title">Commodities</h2>
-            <div class="grid" id="commoditiesGrid"></div>
+        <!-- FINANCIAL JUICE TAB -->
+        <div id="financial-juice" class="tab-content">
+            <h2 class="section-title">💜 Financial Juice: G10 Macro Analysis & Updates</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 12px;">Real-time macro analysis, trade setups, and market-moving insights from Financial Juice</p>
+            <div class="news-grid" id="financialJuiceGrid"></div>
         </div>
 
         <!-- NEWS TAB -->
         <div id="news" class="tab-content">
-            <h2 class="section-title">🔴 Market-Moving Headlines</h2>
+            <h2 class="section-title">Market-Moving Headlines</h2>
             <div class="news-grid" id="newsGrid"></div>
-        </div>
-
-        <!-- RATES TAB -->
-        <div id="rates" class="tab-content">
-            <h2 class="section-title">Policy Rates</h2>
-            <div class="chart-container">
-                <canvas id="ratesChart"></canvas>
-            </div>
-
-            <h2 class="section-title">Detailed Rates</h2>
-            <table id="ratesDetailTable">
-                <thead>
-                    <tr>
-                        <th>Country</th>
-                        <th>Policy Rate (%)</th>
-                        <th>Inflation (%)</th>
-                    </tr>
-                </thead>
-                <tbody id="ratesDetailBody"></tbody>
-            </table>
-        </div>
-
-        <!-- FX TAB -->
-        <div id="fx" class="tab-content">
-            <h2 class="section-title">FX Market</h2>
-            <table id="fxDetailTable">
-                <thead>
-                    <tr>
-                        <th>Pair</th>
-                        <th>Rate</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-                <tbody id="fxDetailBody"></tbody>
-            </table>
-        </div>
-
-        <!-- COMMODITIES TAB -->
-        <div id="commodities" class="tab-content">
-            <h2 class="section-title">Commodity Prices</h2>
-            <div class="chart-container">
-                <canvas id="commoditiesChart"></canvas>
-            </div>
-
-            <h2 class="section-title">Detailed Commodities</h2>
-            <table id="commoditiesDetailTable">
-                <thead>
-                    <tr>
-                        <th>Commodity</th>
-                        <th>Price</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-                <tbody id="commoditiesDetailBody"></tbody>
-            </table>
         </div>
 
         <!-- CALENDAR TAB -->
@@ -461,7 +503,7 @@
     </div>
 
     <footer>
-        Real-time macro data with market-moving news & economic calendar. Updates every 30 seconds.
+        Professional macro fundamentals dashboard with real-time G10 data, labour markets, inflation details, PMI, and Financial Juice analysis. Updates every 30 seconds.
     </footer>
 
     <script>
@@ -470,9 +512,12 @@
         let data = {
             rates: [],
             inflation: [],
+            inflationDetailed: [],
+            labourMarket: [],
+            pmi: [],
             fxPairs: [],
-            commodities: [],
             news: [],
+            financialJuiceUpdates: [],
             calendar: []
         };
 
@@ -484,7 +529,16 @@
                 const newData = await response.json();
                 
                 if (newData.rates && newData.rates.length > 0) {
-                    data = newData;
+                    data.rates = newData.rates;
+                    data.inflation = newData.inflation;
+                    data.inflationDetailed = newData.inflationDetailed || [];
+                    data.labourMarket = newData.labourMarket || [];
+                    data.pmi = newData.pmi || [];
+                    data.fxPairs = newData.fxPairs;
+                    data.news = newData.news;
+                    data.financialJuiceUpdates = newData.financialJuiceUpdates || [];
+                    data.calendar = newData.calendar;
+                    
                     renderAll();
                 }
 
@@ -540,10 +594,12 @@
 
         function renderAll() {
             renderOverview();
-            renderRates();
+            renderInflation();
+            renderLabour();
+            renderPMI();
             renderFX();
-            renderCommodities();
             renderNews();
+            renderFinancialJuice();
             renderCalendar();
         }
 
@@ -554,7 +610,7 @@
                     <div class="card">
                         <h3>${r.country}</h3>
                         <div class="data-point">
-                            <span class="label">Rate</span>
+                            <span class="label">Policy Rate</span>
                             <span class="value">${formatNumber(r.rate)}%</span>
                         </div>
                         <div class="data-point">
@@ -566,29 +622,127 @@
             }).join('');
             document.getElementById('ratesGrid').innerHTML = ratesHtml;
 
-            const fxHtml = data.fxPairs.slice(0, 8).map(fx => `
-                <tr>
-                    <td>${fx.pair}</td>
-                    <td>${formatNumber(fx.rate, 4)}</td>
-                    <td class="${getChangeClass(fx.change)}">${fx.change > 0 ? '↑' : '↓'} ${Math.abs(formatNumber(fx.change))}%</td>
-                </tr>
-            `).join('');
-            document.getElementById('fxTableBody').innerHTML = fxHtml;
-
-            const commodHtml = data.commodities.map(c => `
+            const infHtml = data.inflationDetailed.map(i => `
                 <div class="card">
-                    <h3>${c.name}</h3>
+                    <h3>${i.country}</h3>
                     <div class="data-point">
-                        <span class="label">Price</span>
-                        <span class="value">$${formatNumber(c.price)}</span>
+                        <span class="label">CPI YoY</span>
+                        <span class="value">${formatNumber(i.cpi_yoy)}%</span>
                     </div>
                     <div class="data-point">
-                        <span class="label">Change</span>
-                        <span class="value ${getChangeClass(c.change)}">${c.change > 0 ? '+' : ''}${formatNumber(c.change)}%</span>
+                        <span class="label">3M Annualized</span>
+                        <span class="value">${formatNumber(i.cpi_3m_annualized)}%</span>
+                    </div>
+                    <div class="data-point">
+                        <span class="label">PPI YoY</span>
+                        <span class="value">${formatNumber(i.ppi_yoy)}%</span>
                     </div>
                 </div>
             `).join('');
-            document.getElementById('commoditiesGrid').innerHTML = commodHtml;
+            document.getElementById('inflationGrid').innerHTML = infHtml;
+
+            const labHtml = data.labourMarket.map(l => `
+                <div class="card">
+                    <h3>${l.country}</h3>
+                    <div class="data-point">
+                        <span class="label">Unemployment</span>
+                        <span class="value">${formatNumber(l.unemployment || l.unemployment)}%</span>
+                    </div>
+                    ${l.nfp ? `<div class="data-point">
+                        <span class="label">NFP</span>
+                        <span class="value">${(l.nfp / 1000).toFixed(0)}K</span>
+                    </div>` : ''}
+                    <div class="data-point">
+                        <span class="label">Wage Growth</span>
+                        <span class="value">${formatNumber(l.wage_growth_yoy)}%</span>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('labourGrid').innerHTML = labHtml;
+        }
+
+        function renderInflation() {
+            const infHtml = data.inflationDetailed.map(i => `
+                <tr>
+                    <td><strong>${i.country}</strong></td>
+                    <td>${formatNumber(i.cpi_yoy)}%</td>
+                    <td>${formatNumber(i.cpi_mom)}%</td>
+                    <td>${formatNumber(i.cpi_3m_annualized)}%</td>
+                    <td>${formatNumber(i.ppi_yoy)}%</td>
+                    <td>${formatNumber(i.core_cpi)}%</td>
+                    <td>${i.shelter ? 'Shelter: ' + formatNumber(i.shelter) + '%' : i.energy ? 'Energy: ' + formatNumber(i.energy) + '%' : 'Services'}</td>
+                </tr>
+            `).join('');
+            document.getElementById('inflationBody').innerHTML = infHtml;
+        }
+
+        function renderLabour() {
+            const labHtml = data.labourMarket.map(l => `
+                <tr>
+                    <td><strong>${l.country}</strong></td>
+                    <td>${formatNumber(l.unemployment || l.unemployment_prev)}%</td>
+                    <td>${l.nfp ? (l.nfp / 1000).toFixed(0) + 'K' : 'N/A'}</td>
+                    <td>${formatNumber(l.wage_growth_yoy)}%</td>
+                    <td>${l.participation_rate ? formatNumber(l.participation_rate) + '%' : 'N/A'}</td>
+                    <td style="font-size: 11px;">${l.last_report}</td>
+                </tr>
+            `).join('');
+            document.getElementById('labourBody').innerHTML = labHtml;
+        }
+
+        function renderPMI() {
+            const pmiHtml = data.pmi.map(p => `
+                <tr>
+                    <td><strong>${p.country}</strong></td>
+                    <td class="${p.manufacturing_pmi > 50 ? 'positive' : 'negative'}">${formatNumber(p.manufacturing_pmi, 1)}</td>
+                    <td class="${p.services_pmi > 50 ? 'positive' : 'negative'}">${formatNumber(p.services_pmi, 1)}</td>
+                    <td class="${p.composite > 50 ? 'positive' : 'negative'}">${formatNumber(p.composite, 1)}</td>
+                    <td style="font-size: 11px;">${p.last_report}</td>
+                </tr>
+            `).join('');
+            document.getElementById('pmiBody').innerHTML = pmiHtml;
+
+            const ctx = document.getElementById('pmiChart');
+            if (charts.pmi) charts.pmi.destroy();
+            charts.pmi = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.pmi.map(p => p.country),
+                    datasets: [
+                        {
+                            label: 'Manufacturing PMI',
+                            data: data.pmi.map(p => p.manufacturing_pmi),
+                            backgroundColor: '#3b82f6',
+                        },
+                        {
+                            label: 'Services PMI',
+                            data: data.pmi.map(p => p.services_pmi),
+                            backgroundColor: '#10b981',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, labels: { color: '#e4e6eb' } } },
+                    scales: {
+                        y: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } },
+                        x: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } }
+                    }
+                }
+            });
+        }
+
+        function renderFX() {
+            const fxHtml = data.fxPairs.map(fx => `
+                <tr>
+                    <td><strong>${fx.pair}</strong></td>
+                    <td>${formatNumber(fx.rate, 4)}</td>
+                    <td class="${getChangeClass(fx.change)}">${fx.change > 0 ? '↑' : '↓'} ${Math.abs(formatNumber(fx.change))}%</td>
+                    <td style="font-size: 11px;">Rate divergence play</td>
+                </tr>
+            `).join('');
+            document.getElementById('fxBody').innerHTML = fxHtml;
         }
 
         function renderNews() {
@@ -612,6 +766,27 @@
             document.getElementById('newsGrid').innerHTML = newsHtml;
         }
 
+        function renderFinancialJuice() {
+            if (!data.financialJuiceUpdates || data.financialJuiceUpdates.length === 0) return;
+
+            const fjHtml = data.financialJuiceUpdates.map(fj => `
+                <div class="news-item financial-juice">
+                    <div class="news-header">
+                        <h3 class="news-title">${fj.title}</h3>
+                    </div>
+                    <div class="news-meta">
+                        <span class="news-category">${fj.category}</span>
+                        <span>${formatTime(fj.published)}</span>
+                    </div>
+                    <div class="news-summary">${fj.summary}</div>
+                    ${fj.key_points ? `<ul class="news-points">${fj.key_points.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}
+                    <div class="news-source">💜 ${fj.source}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('financialJuiceGrid').innerHTML = fjHtml;
+        }
+
         function renderCalendar() {
             if (!data.calendar || data.calendar.length === 0) return;
 
@@ -627,88 +802,6 @@
                 </tr>
             `).join('');
             document.getElementById('calendarBody').innerHTML = calHtml;
-        }
-
-        function renderRates() {
-            const ratesHtml = data.rates.map(r => {
-                const inf = data.inflation.find(i => i.country === r.country);
-                return `
-                    <tr>
-                        <td>${r.country}</td>
-                        <td>${formatNumber(r.rate)}</td>
-                        <td>${formatNumber(inf?.value || 0)}</td>
-                    </tr>
-                `;
-            }).join('');
-            document.getElementById('ratesDetailBody').innerHTML = ratesHtml;
-
-            const ctx = document.getElementById('ratesChart');
-            if (charts.rates) charts.rates.destroy();
-            charts.rates = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.rates.map(r => r.country),
-                    datasets: [{
-                        label: 'Policy Rate (%)',
-                        data: data.rates.map(r => r.rate),
-                        backgroundColor: '#3b82f6',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, labels: { color: '#e4e6eb' } } },
-                    scales: {
-                        y: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } },
-                        x: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } }
-                    }
-                }
-            });
-        }
-
-        function renderFX() {
-            const fxHtml = data.fxPairs.map(fx => `
-                <tr>
-                    <td><strong>${fx.pair}</strong></td>
-                    <td>${formatNumber(fx.rate, 4)}</td>
-                    <td class="${getChangeClass(fx.change)}">${fx.change > 0 ? '+' : ''}${formatNumber(fx.change)}%</td>
-                </tr>
-            `).join('');
-            document.getElementById('fxDetailBody').innerHTML = fxHtml;
-        }
-
-        function renderCommodities() {
-            const commodHtml = data.commodities.map(c => `
-                <tr>
-                    <td>${c.name}</td>
-                    <td>$${formatNumber(c.price)}</td>
-                    <td class="${getChangeClass(c.change)}">${c.change > 0 ? '+' : ''}${formatNumber(c.change)}%</td>
-                </tr>
-            `).join('');
-            document.getElementById('commoditiesDetailBody').innerHTML = commodHtml;
-
-            const ctx = document.getElementById('commoditiesChart');
-            if (charts.commodities) charts.commodities.destroy();
-            charts.commodities = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.commodities.map(c => c.name),
-                    datasets: [{
-                        label: 'Price',
-                        data: data.commodities.map(c => c.price),
-                        backgroundColor: '#10b981',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, labels: { color: '#e4e6eb' } } },
-                    scales: {
-                        y: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } },
-                        x: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } }
-                    }
-                }
-            });
         }
 
         function updateTimestamp() {
