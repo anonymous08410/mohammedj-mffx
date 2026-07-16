@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro Fundamentals Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0f1419;
+            --bg-card: #1a1f2e;
+            --bg-hover: #252d3d;
+            --text-primary: #e4e6eb;
+            --text-secondary: #a0a6b8;
+            --text-muted: #7a8195;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --border-color: #2d3545;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            padding: 30px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav button {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav button:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .nav button.active {
+            background-color: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent-blue);
+            background-color: var(--bg-hover);
+        }
+
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .data-point {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-point:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .value {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .positive {
+            color: var(--accent-green);
+        }
+
+        .negative {
+            color: var(--accent-red);
+        }
+
+        .neutral {
+            color: var(--text-primary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        th {
+            background-color: var(--bg-hover);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        tr:hover {
+            background-color: var(--bg-hover);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .chart-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            height: 350px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        /* News Styles */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .news-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .news-item:hover {
+            background-color: var(--bg-hover);
+            border-left-color: var(--accent-green);
+        }
+
+        .news-item.high-impact {
+            border-left-color: var(--accent-red);
+        }
+
+        .news-item.medium-impact {
+            border-left-color: var(--accent-amber);
+        }
+
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .news-title {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .news-impact {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .news-impact.high {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .news-impact.medium {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+        }
+
+        .news-impact.low {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .news-category {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: var(--accent-blue);
+            background-color: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+            border-radius: 3px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .news-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .news-summary {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .news-source {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 Macro Fundamentals Dashboard</h1>
+            <p>Real-time G10 + News + Commodities</p>
+            <div class="timestamp">Last updated: <span id="lastUpdate">--:--</span></div>
+        </header>
+
+        <div class="nav">
+            <button class="nav-btn active" onclick="switchTab('overview')">Overview</button>
+            <button class="nav-btn" onclick="switchTab('news')">News (Market Moving)</button>
+            <button class="nav-btn" onclick="switchTab('rates')">Rates</button>
+            <button class="nav-btn" onclick="switchTab('fx')">FX Pairs</button>
+            <button class="nav-btn" onclick="switchTab('commodities')">Commodities</button>
+        </div>
+
+        <!-- OVERVIEW TAB -->
+        <div id="overview" class="tab-content active">
+            <h2 class="section-title">Central Banks & Inflation</h2>
+            <div class="grid" id="ratesGrid"></div>
+
+            <h2 class="section-title">Major FX Pairs</h2>
+            <table id="fxTable">
+                <thead>
+                    <tr>
+                        <th>Pair</th>
+                        <th>Rate</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody id="fxTableBody"></tbody>
+            </table>
+
+            <h2 class="section-title">Commodities</h2>
+            <div class="grid" id="commoditiesGrid"></div>
+        </div>
+
+        <!-- NEWS TAB -->
+        <div id="news" class="tab-content">
+            <h2 class="section-title">🔴 Market-Moving Headlines</h2>
+            <div class="news-grid" id="newsGrid"></div>
+        </div>
+
+        <!-- RATES TAB -->
+        <div id="rates" class="tab-content">
+            <h2 class="section-title">Policy Rates</h2>
+            <div class="chart-container">
+                <canvas id="ratesChart"></canvas>
+            </div>
+
+            <h2 class="section-title">Detailed Rates</h2>
+            <table id="ratesDetailTable">
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Policy Rate (%)</th>
+                        <th>Inflation (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="ratesDetailBody"></tbody>
+            </table>
+        </div>
+
+        <!-- FX TAB -->
+        <div id="fx" class="tab-content">
+            <h2 class="section-title">FX Market</h2>
+            <table id="fxDetailTable">
+                <thead>
+                    <tr>
+                        <th>Pair</th>
+                        <th>Rate</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody id="fxDetailBody"></tbody>
+            </table>
+        </div>
+
+        <!-- COMMODITIES TAB -->
+        <div id="commodities" class="tab-content">
+            <h2 class="section-title">Commodity Prices</h2>
+            <div class="chart-container">
+                <canvas id="commoditiesChart"></canvas>
+            </div>
+
+            <h2 class="section-title">Detailed Commodities</h2>
+            <table id="commoditiesDetailTable">
+                <thead>
+                    <tr>
+                        <th>Commodity</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody id="commoditiesDetailBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        Real-time macro data with market-moving news. Updates every 30 seconds.
+    </footer>
+
+    <script>
+        // API URL - Change this to your Render backend URL
+        const API_URL = 'https://macro-fundamentals-2.onrender.com';
+
+        let data = {
+            rates: [],
+            inflation: [],
+            fxPairs: [],
+            commodities: [],
+            news: []
+        };
+
+        let charts = {};
+
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_URL}/api/dashboard`);
+                const newData = await response.json();
+                
+                if (newData.rates && newData.rates.length > 0) {
+                    data.rates = newData.rates;
+                    data.inflation = newData.inflation;
+                    data.fxPairs = newData.fxPairs;
+                    data.commodities = newData.commodities;
+                    renderAll();
+                }
+
+                // Fetch news separately
+                try {
+                    const newsRes = await fetch(`${API_URL}/api/news`);
+                    const newsData = await newsRes.json();
+                    if (newsData.news) {
+                        data.news = newsData.news;
+                        renderNews();
+                    }
+                } catch (e) {
+                    console.log('News fetch skipped');
+                }
+
+                updateTimestamp();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            setTimeout(() => {
+                Object.values(charts).forEach(chart => {
+                    if (chart) chart.resize();
+                });
+            }, 100);
+        }
+
+        function formatNumber(value, decimals = 2) {
+            return parseFloat(value).toFixed(decimals);
+        }
+
+        function getChangeClass(change) {
+            if (change > 0) return 'positive';
+            if (change < 0) return 'negative';
+            return 'neutral';
+        }
+
+        function formatTime(isoTime) {
+            const date = new Date(isoTime);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours}h ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function renderAll() {
+            renderOverview();
+            renderRates();
+            renderFX();
+            renderCommodities();
+        }
+
+        function renderNews() {
+            if (!data.news || data.news.length === 0) return;
+
+            const newsHtml = data.news.map(n => `
+                <div class="news-item ${n.impact.toLowerCase()}-impact">
+                    <div class="news-header">
+                        <h3 class="news-title">${n.title}</h3>
+                        <span class="news-impact ${n.impact.toLowerCase()}">${n.impact}</span>
+                    </div>
+                    <div class="news-meta">
+                        <span class="news-category">${n.category}</span>
+                        <span class="news-time">${formatTime(n.published)}</span>
+                    </div>
+                    <div class="news-summary">${n.summary}</div>
+                    <div class="news-source">📰 ${n.source}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('newsGrid').innerHTML = newsHtml;
+        }
+
+        function renderOverview() {
+            const ratesHtml = data.rates.map(r => {
+                const inf = data.inflation.find(i => i.country === r.country);
+                return `
+                    <div class="card">
+                        <h3>${r.country}</h3>
+                        <div class="data-point">
+                            <span class="label">Rate</span>
+                            <span class="value">${formatNumber(r.rate)}%</span>
+                        </div>
+                        <div class="data-point">
+                            <span class="label">Inflation</span>
+                            <span class="value">${formatNumber(inf?.value || 0)}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('ratesGrid').innerHTML = ratesHtml;
+
+            const fxHtml = data.fxPairs.slice(0, 8).map(fx => `
+                <tr>
+                    <td>${fx.pair}</td>
+                    <td>${formatNumber(fx.rate, 4)}</td>
+                    <td class="${getChangeClass(fx.change)}">${fx.change > 0 ? '↑' : '↓'} ${Math.abs(formatNumber(fx.change))}%</td>
+                </tr>
+            `).join('');
+            document.getElementById('fxTableBody').innerHTML = fxHtml;
+
+            const commodHtml = data.commodities.map(c => `
+                <div class="card">
+                    <h3>${c.name}</h3>
+                    <div class="data-point">
+                        <span class="label">Price</span>
+                        <span class="value">$${formatNumber(c.price)}</span>
+                    </div>
+                    <div class="data-point">
+                        <span class="label">Change</span>
+                        <span class="value ${getChangeClass(c.change)}">${c.change > 0 ? '+' : ''}${formatNumber(c.change)}%</span>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('commoditiesGrid').innerHTML = commodHtml;
+        }
+
+        function renderRates() {
+            const ratesHtml = data.rates.map(r => {
+                const inf = data.inflation.find(i => i.country === r.country);
+                return `
+                    <tr>
+                        <td>${r.country}</td>
+                        <td>${formatNumber(r.rate)}</td>
+                        <td>${formatNumber(inf?.value || 0)}</td>
+                    </tr>
+                `;
+            }).join('');
+            document.getElementById('ratesDetailBody').innerHTML = ratesHtml;
+
+            const ctx = document.getElementById('ratesChart');
+            if (charts.rates) charts.rates.destroy();
+            charts.rates = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.rates.map(r => r.country),
+                    datasets: [{
+                        label: 'Policy Rate (%)',
+                        data: data.rates.map(r => r.rate),
+                        backgroundColor: '#3b82f6',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, labels: { color: '#e4e6eb' } } },
+                    scales: {
+                        y: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } },
+                        x: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } }
+                    }
+                }
+            });
+        }
+
+        function renderFX() {
+            const fxHtml = data.fxPairs.map(fx => `
+                <tr>
+                    <td><strong>${fx.pair}</strong></td>
+                    <td>${formatNumber(fx.rate, 4)}</td>
+                    <td class="${getChangeClass(fx.change)}">${fx.change > 0 ? '+' : ''}${formatNumber(fx.change)}%</td>
+                </tr>
+            `).join('');
+            document.getElementById('fxDetailBody').innerHTML = fxHtml;
+        }
+
+        function renderCommodities() {
+            const commodHtml = data.commodities.map(c => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>$${formatNumber(c.price)}</td>
+                    <td class="${getChangeClass(c.change)}">${c.change > 0 ? '+' : ''}${formatNumber(c.change)}%</td>
+                </tr>
+            `).join('');
+            document.getElementById('commoditiesDetailTable').innerHTML = commodHtml;
+
+            const ctx = document.getElementById('commoditiesChart');
+            if (charts.commodities) charts.commodities.destroy();
+            charts.commodities = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.commodities.map(c => c.name),
+                    datasets: [{
+                        label: 'Price',
+                        data: data.commodities.map(c => c.price),
+                        backgroundColor: '#10b981',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, labels: { color: '#e4e6eb' } } },
+                    scales: {
+                        y: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } },
+                        x: { ticks: { color: '#a0a6b8' }, grid: { color: '#2d3545' } }
+                    }
+                }
+            });
+        }
+
+        function updateTimestamp() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Initialize
+        fetchData();
+        setInterval(fetchData, 30000);
+        setInterval(updateTimestamp, 1000);
+    </script>
+</body>
+</html>
