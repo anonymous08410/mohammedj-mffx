@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G10 Macro Dashboard - MarketContext Style</title>
+    <title>Ultimate G10 Macro Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -29,7 +29,12 @@
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 12px;
-            line-height: 1.5;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
         .top-bar {
@@ -51,241 +56,170 @@
             white-space: nowrap;
         }
 
-        .stat-label {
-            color: var(--text-muted);
-        }
-
         .stat-value {
             font-weight: 600;
             font-family: 'Courier New', monospace;
         }
 
-        .stat.up .stat-value {
-            color: var(--accent-up);
-        }
+        .stat.up .stat-value { color: var(--accent-up); }
+        .stat.down .stat-value { color: var(--accent-down); }
 
-        .stat.down .stat-value {
-            color: var(--accent-down);
-        }
-
-        .stat-change {
-            font-size: 10px;
-            margin-left: 4px;
-        }
-
-        .stat.up .stat-change {
-            color: var(--accent-up);
-        }
-
-        .stat.down .stat-change {
-            color: var(--accent-down);
-        }
-
-        .main-container {
+        .tabs {
             display: flex;
-            height: calc(100vh - 80px);
-        }
-
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border);
-            overflow-y: auto;
-        }
-
-        .header-section {
-            padding: 15px 20px;
+            gap: 0;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            overflow-x: auto;
+            background: #0a0e1a;
+            padding: 0 20px;
         }
 
-        .currency-selector {
-            background: var(--card);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 6px 12px;
-            border-radius: 4px;
+        .tab {
+            padding: 12px 16px;
             cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            white-space: nowrap;
             font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 15px;
-            padding: 20px;
-            height: 100%;
+        .tab:hover {
+            color: var(--text-primary);
         }
 
-        .column {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .tab.active {
+            color: var(--accent-purple);
+            border-bottom-color: var(--accent-purple);
+        }
+
+        .content {
+            flex: 1;
             overflow-y: auto;
+            padding: 20px;
+            display: none;
         }
 
-        .indicator-box {
+        .content.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 4px;
             padding: 15px;
-            flex: 1;
         }
 
-        .indicator-title {
+        .card-title {
             font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
             margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 1px;
         }
 
-        .indicator-value {
+        .card-value {
             font-size: 24px;
             font-weight: 700;
             font-family: 'Courier New', monospace;
             margin-bottom: 4px;
         }
 
-        .indicator-subtext {
+        .card-subtitle {
             font-size: 11px;
             color: var(--text-muted);
         }
 
-        .theme {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 4px;
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .heatmap-cell {
             padding: 12px;
-            margin-bottom: 8px;
-        }
-
-        .theme-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-
-        .theme-value {
-            font-size: 16px;
+            border-radius: 4px;
+            text-align: center;
             font-weight: 600;
-            margin-bottom: 8px;
         }
 
-        .theme-sentiment {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
+        .heat-hot { background: rgba(239, 68, 68, 0.3); color: var(--accent-down); }
+        .heat-warm { background: rgba(245, 158, 11, 0.3); color: #f59e0b; }
+        .heat-neutral { background: rgba(99, 102, 241, 0.3); color: var(--accent-neutral); }
+        .heat-cool { background: rgba(59, 130, 246, 0.3); color: #3b82f6; }
+        .heat-cold { background: rgba(16, 185, 129, 0.3); color: var(--accent-up); }
+
+        .comparative {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        .sentiment-rising {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-up);
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
         }
 
-        .sentiment-falling {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-down);
-        }
-
-        .sentiment-stable {
-            background: rgba(99, 102, 241, 0.2);
-            color: var(--accent-neutral);
-        }
-
-        .sentiment-hiking {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-down);
-        }
-
-        .sentiment-cutting {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-up);
-        }
-
-        .sentiment-neutral {
-            background: rgba(139, 146, 176, 0.2);
+        .data-label {
             color: var(--text-secondary);
         }
 
-        .fx-pair-box {
+        .data-value {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .setup-card {
             background: var(--card);
             border: 2px solid var(--border);
             border-radius: 4px;
-            padding: 20px;
-            text-align: center;
-            flex: 2;
+            padding: 15px;
+            margin-bottom: 15px;
         }
 
-        .fx-pair-name {
-            font-size: 18px;
-            font-weight: 700;
+        .setup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 12px;
+        }
+
+        .setup-name {
+            font-weight: 700;
+            font-size: 14px;
             color: var(--text-primary);
         }
 
-        .fx-pair-value {
-            font-size: 48px;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 12px;
-        }
-
-        .fx-pair-value.negative {
-            color: var(--accent-down);
-        }
-
-        .fx-pair-value.positive {
-            color: var(--accent-up);
-        }
-
-        .fx-pair-info {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-
-        .fx-pair-sentiment {
-            display: inline-block;
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-down);
-            padding: 6px 12px;
+        .setup-confidence {
+            padding: 2px 8px;
             border-radius: 3px;
             font-size: 10px;
             font-weight: 700;
-            text-transform: uppercase;
         }
 
-        .right-panel {
-            width: 350px;
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+        .conf-high { background: rgba(16, 185, 129, 0.2); color: var(--accent-up); }
+        .conf-medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .conf-low { background: rgba(239, 68, 68, 0.2); color: var(--accent-down); }
+
+        .setup-details {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.8;
         }
 
-        .releases-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .releases-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        .release-item {
+        .news-item {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 4px;
@@ -293,292 +227,716 @@
             margin-bottom: 10px;
         }
 
-        .release-event {
-            font-size: 12px;
+        .news-title {
             font-weight: 600;
+            margin-bottom: 4px;
             color: var(--text-primary);
-            margin-bottom: 4px;
         }
 
-        .release-value {
-            font-size: 16px;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 4px;
-        }
-
-        .release-meta {
+        .news-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 10px;
-        }
-
-        .release-prev {
             color: var(--text-muted);
+            margin-bottom: 6px;
         }
 
-        .release-impact {
+        .impact-badge {
             padding: 2px 6px;
             border-radius: 3px;
             font-weight: 700;
             text-transform: uppercase;
         }
 
-        .impact-beat {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-up);
-        }
+        .impact-high { background: rgba(239, 68, 68, 0.2); color: var(--accent-down); }
+        .impact-medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .impact-low { background: rgba(16, 185, 129, 0.2); color: var(--accent-up); }
 
-        .impact-miss {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-down);
-        }
-
-        .impact-inline {
-            background: rgba(99, 102, 241, 0.2);
-            color: var(--accent-neutral);
-        }
-
-        .bottom-bar {
-            border-top: 1px solid var(--border);
-            padding: 15px 20px;
-            background: #0a0e1a;
+        .selector {
             display: flex;
-            gap: 15px;
-            font-size: 11px;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .calendar-btn {
-            padding: 6px 12px;
+        .selector select {
             background: var(--card);
             border: 1px solid var(--border);
-            color: var(--text-secondary);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
             cursor: pointer;
-            border-radius: 3px;
         }
 
-        .calendar-btn.active {
-            background: var(--accent-purple);
-            color: white;
-            border-color: var(--accent-purple);
+        .cot-chart {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 4px;
         }
 
-        .calendar-info {
+        .bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .bar-label {
+            width: 100px;
+            font-size: 11px;
             color: var(--text-muted);
         }
 
-        .calendar-counts {
-            color: var(--text-secondary);
+        .bar-fill {
+            height: 20px;
+            background: var(--accent-neutral);
+            border-radius: 2px;
+            flex: 1;
+        }
+
+        .bar-value {
+            font-size: 11px;
             font-weight: 600;
+            min-width: 50px;
+            text-align: right;
         }
 
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
             background: var(--border);
             border-radius: 4px;
         }
-
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-muted);
         }
     </style>
 </head>
 <body>
-    <!-- TOP TICKER BAR -->
-    <div class="top-bar" id="topBar"></div>
+    <div class="container">
+        <!-- TOP TICKER -->
+        <div class="top-bar" id="topBar"></div>
 
-    <!-- MAIN GRID -->
-    <div class="main-container">
-        <!-- LEFT PANEL (4-COLUMN GRID) -->
-        <div class="left-panel">
-            <div class="header-section">
-                <div>
-                    <span id="currencyLabel" style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Select Currency:</span>
-                </div>
-                <select class="currency-selector" id="currencySelector" onchange="switchCurrency(this.value)">
-                    <option value="USD">USD - United States</option>
-                    <option value="EUR">EUR - Eurozone</option>
-                    <option value="GBP">GBP - United Kingdom</option>
-                    <option value="JPY">JPY - Japan</option>
-                    <option value="CAD">CAD - Canada</option>
-                    <option value="AUD">AUD - Australia</option>
-                    <option value="NZD">NZD - New Zealand</option>
-                    <option value="CHF">CHF - Switzerland</option>
-                </select>
-            </div>
-
-            <div class="grid-container">
-                <!-- COLUMN 1: LEADING INDICATORS -->
-                <div class="column" id="column1"></div>
-
-                <!-- COLUMN 2: THEMES -->
-                <div class="column" id="column2"></div>
-
-                <!-- COLUMN 3: FX PAIR -->
-                <div class="column" id="column3"></div>
-
-                <!-- COLUMN 4: RATE EXPECTATIONS -->
-                <div class="column" id="column4"></div>
-            </div>
+        <!-- TABS -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+            <div class="tab" onclick="switchTab('overview')">🌍 Overview</div>
+            <div class="tab" onclick="switchTab('inflation')">📈 Inflation</div>
+            <div class="tab" onclick="switchTab('labour')">👥 Labour</div>
+            <div class="tab" onclick="switchTab('pmi')">🏭 PMI</div>
+            <div class="tab" onclick="switchTab('yields')">📉 Yields</div>
+            <div class="tab" onclick="switchTab('realyields')">💰 Real Yields</div>
+            <div class="tab" onclick="switchTab('cot')">📍 COT</div>
+            <div class="tab" onclick="switchTab('cross')">🔄 Cross</div>
+            <div class="tab" onclick="switchTab('centralbank')">🏦 CB Tracker</div>
+            <div class="tab" onclick="switchTab('risk')">⚠️ Risk</div>
+            <div class="tab" onclick="switchTab('setups')">🎯 Setups</div>
+            <div class="tab" onclick="switchTab('surprises')">💥 Surprises</div>
+            <div class="tab" onclick="switchTab('juice')">💜 Juice</div>
+            <div class="tab" onclick="switchTab('news')">📰 News</div>
+            <div class="tab" onclick="switchTab('calendar')">📅 Calendar</div>
         </div>
 
-        <!-- RIGHT PANEL: RECENT RELEASES -->
-        <div class="right-panel">
-            <div class="releases-header">🔴 RECENT RELEASES</div>
-            <div class="releases-content" id="releasesContent"></div>
-        </div>
-    </div>
-
-    <!-- BOTTOM BAR: CALENDAR -->
-    <div class="bottom-bar">
-        <button class="calendar-btn active">CALENDAR</button>
-        <span id="currencyPair" style="color: var(--text-secondary); font-weight: 600;">USD/USD</span>
-        <span style="color: var(--text-muted);">ALL</span>
-        <span class="calendar-counts" id="calendarCounts">11 released</span>
-        <span class="calendar-counts" id="calendarUpcoming">1e upcoming</span>
+        <!-- CONTENT AREAS -->
+        <div id="dashboard" class="content active"></div>
+        <div id="overview" class="content"></div>
+        <div id="inflation" class="content"></div>
+        <div id="labour" class="content"></div>
+        <div id="pmi" class="content"></div>
+        <div id="yields" class="content"></div>
+        <div id="realyields" class="content"></div>
+        <div id="cot" class="content"></div>
+        <div id="cross" class="content"></div>
+        <div id="centralbank" class="content"></div>
+        <div id="risk" class="content"></div>
+        <div id="setups" class="content"></div>
+        <div id="surprises" class="content"></div>
+        <div id="juice" class="content"></div>
+        <div id="news" class="content"></div>
+        <div id="calendar" class="content"></div>
     </div>
 
     <script>
         const API_URL = 'https://macro-fundamentals-2.onrender.com';
-        let currentCurrency = 'USD';
         let allData = {};
+        let selectedCurrency = 'USD';
 
         async function fetchData() {
             try {
                 const res = await fetch(`${API_URL}/api/dashboard`);
                 allData = await res.json();
-                renderDashboard();
+                renderAllTabs();
             } catch (e) {
-                console.error('Error:', e);
+                console.error('Error fetching data:', e);
             }
         }
 
-        function switchCurrency(curr) {
-            currentCurrency = curr;
-            renderDashboard();
+        function switchTab(tabName) {
+            // Hide all
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function renderTopBar() {
+            const stats = allData.topStats;
+            let html = `
+                <div class="stat up">
+                    <span>DOT</span>
+                    <span class="stat-value">${stats.dot.value}%</span>
+                </div>
+                <div class="stat up">
+                    <span>Institutions</span>
+                    <span class="stat-value">${stats.institutions.value}%</span>
+                </div>
+                <div class="stat up">
+                    <span>Retail</span>
+                    <span class="stat-value">${stats.retail.value}%</span>
+                </div>
+                <div class="stat down">
+                    <span>Oil</span>
+                    <span class="stat-value">$${stats.oil.value}</span>
+                </div>
+                <div class="stat down">
+                    <span>Gold</span>
+                    <span class="stat-value">$${stats.gold.value}</span>
+                </div>
+                <div class="stat down">
+                    <span>Silver</span>
+                    <span class="stat-value">$${stats.silver.value}</span>
+                </div>
+                <div class="stat up">
+                    <span>DXY</span>
+                    <span class="stat-value">${stats.dxy.value}</span>
+                </div>
+                <div class="stat up">
+                    <span>VIX</span>
+                    <span class="stat-value">${stats.vix.value}</span>
+                </div>
+                <div class="stat up">
+                    <span>US HY OAS</span>
+                    <span class="stat-value">${stats.usHY}</span>
+                </div>
+            `;
+            document.getElementById('topBar').innerHTML = html;
         }
 
         function renderDashboard() {
-            if (!allData.g10Data || !allData.g10Data[currentCurrency]) return;
-
-            const curr = allData.g10Data[currentCurrency];
-
-            // TOP BAR
-            const topBar = `
-                <div class="stat"><span class="stat-label">DOT</span><span class="stat-value">${allData.topStats.dot.value}%</span><span class="stat-change ${allData.topStats.dot.direction}">${allData.topStats.dot.change > 0 ? '+' : ''}${allData.topStats.dot.change}%</span></div>
-                <div class="stat"><span class="stat-label">Institutions</span><span class="stat-value">${allData.topStats.institutions.value}%</span><span class="stat-change ${allData.topStats.institutions.direction}">${allData.topStats.institutions.change > 0 ? '+' : ''}${allData.topStats.institutions.change}%</span></div>
-                <div class="stat"><span class="stat-label">Retail</span><span class="stat-value">${allData.topStats.retail.value}%</span><span class="stat-change ${allData.topStats.retail.direction}">${allData.topStats.retail.change > 0 ? '+' : ''}${allData.topStats.retail.change}%</span></div>
-                <div class="stat"><span class="stat-label">Oil</span><span class="stat-value">$${allData.topStats.oil.value}</span><span class="stat-change ${allData.topStats.oil.direction}">${allData.topStats.oil.change > 0 ? '+' : ''}${allData.topStats.oil.change}%</span></div>
-                <div class="stat"><span class="stat-label">Gold</span><span class="stat-value">$${allData.topStats.gold.value}</span><span class="stat-change ${allData.topStats.gold.direction}">${allData.topStats.gold.change > 0 ? '+' : ''}${allData.topStats.gold.change}%</span></div>
-                <div class="stat"><span class="stat-label">Silver</span><span class="stat-value">$${allData.topStats.silver.value}</span><span class="stat-change ${allData.topStats.silver.direction}">${allData.topStats.silver.change > 0 ? '+' : ''}${allData.topStats.silver.change}%</span></div>
-                <div class="stat"><span class="stat-label">DXY</span><span class="stat-value">${allData.topStats.dxy.value}</span><span class="stat-change ${allData.topStats.dxy.direction}">${allData.topStats.dxy.change > 0 ? '+' : ''}${allData.topStats.dxy.change}%</span></div>
-            `;
-            document.getElementById('topBar').innerHTML = topBar;
-
-            // COLUMN 1: LEADING INDICATORS
-            const col1 = `
-                <div class="indicator-box">
-                    <div class="indicator-title">PPI</div>
-                    <div class="indicator-value">${curr.leadingIndicators.ppi.value}%</div>
-                    <div class="indicator-subtext">↑ ${curr.leadingIndicators.ppi.change}</div>
-                </div>
-                <div class="indicator-box">
-                    <div class="indicator-title">Economic Sentiment</div>
-                    <div class="indicator-value">${curr.leadingIndicators.economicSentiment.value}</div>
-                    <div class="indicator-subtext">${curr.leadingIndicators.economicSentiment.change > 0 ? '↑' : '↓'} ${curr.leadingIndicators.economicSentiment.change}</div>
-                </div>
-                <div class="indicator-box">
-                    <div class="indicator-title">Retail Sales</div>
-                    <div class="indicator-value">${curr.leadingIndicators.retailSales.value}%</div>
-                    <div class="indicator-subtext">${curr.leadingIndicators.retailSales.change > 0 ? '↑' : '↓'} ${curr.leadingIndicators.retailSales.change}</div>
-                </div>
-                <div class="indicator-box">
-                    <div class="indicator-title">Labour Market Index</div>
-                    <div class="indicator-value">${curr.leadingIndicators.labourMarketIndex.value}</div>
-                    <div class="indicator-subtext">${curr.leadingIndicators.labourMarketIndex.change > 0 ? '↑' : '↓'} ${curr.leadingIndicators.labourMarketIndex.change}</div>
-                </div>
-            `;
-            document.getElementById('column1').innerHTML = col1;
-
-            // COLUMN 2: THEMES
-            const col2 = curr.themes.map(t => `
-                <div class="theme">
-                    <div class="theme-label">${t.name}</div>
-                    <div class="theme-value">${t.value}${typeof t.value === 'number' ? '%' : ''}</div>
-                    <span class="theme-sentiment sentiment-${t.sentiment}">${t.sentiment}</span>
-                </div>
-            `).join('');
-            document.getElementById('column2').innerHTML = col2;
-
-            // COLUMN 3: FX PAIR (LARGE)
-            const fxPair = `${currentCurrency}/USD`;
-            const col3 = `
-                <div class="fx-pair-box">
-                    <div class="fx-pair-name">${fxPair}</div>
-                    <div class="fx-pair-value ${curr.macroData.gdpGrowth > 0 ? 'positive' : 'negative'}">-1.60%</div>
-                    <div class="fx-pair-info">Interest Differential</div>
-                    <div style="margin-bottom: 12px; color: var(--text-muted); font-size: 10px;">2Y SPREAD -140bp</div>
-                    <div class="fx-pair-sentiment">- NEGATIVE</div>
-                </div>
-            `;
-            document.getElementById('column3').innerHTML = col3;
-
-            // COLUMN 4: RATE EXPECTATIONS
-            const col4 = `
-                <div class="indicator-box">
-                    <div class="indicator-title">Interest Rates</div>
-                    <div class="indicator-value">${curr.rate}%</div>
-                    <div class="indicator-subtext">Policy Rate</div>
-                </div>
-                <div class="indicator-box">
-                    <div class="indicator-title">Inflation</div>
-                    <div class="indicator-value">${curr.inflation}%</div>
-                    <div class="indicator-subtext">Headline YoY</div>
-                </div>
-                <div class="indicator-box">
-                    <div class="indicator-title">Core Inflation</div>
-                    <div class="indicator-value">${curr.macroData.coreInflation}%</div>
-                    <div class="indicator-subtext">Latest Reading</div>
-                </div>
-                <div class="indicator-box">
-                    <div class="indicator-title">Unemployment</div>
-                    <div class="indicator-value">${curr.macroData.unemployment}%</div>
-                    <div class="indicator-subtext">Latest Reading</div>
-                </div>
-            `;
-            document.getElementById('column4').innerHTML = col4;
-
-            // RECENT RELEASES
-            const releases = curr.recentReleases.map(r => `
-                <div class="release-item">
-                    <div class="release-event">${r.event}</div>
-                    <div class="release-value">${r.value}</div>
-                    <div class="release-meta">
-                        <span class="release-prev">Prev: ${r.prev}</span>
-                        <span class="release-impact impact-${r.impact.toLowerCase()}">${r.impact}</span>
+            const curr = allData.g10Data[selectedCurrency];
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; height: 100%;">
+                    <!-- COL 1: INDICATORS -->
+                    <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
+                        <div class="card">
+                            <div class="card-title">PPI YoY</div>
+                            <div class="card-value">${curr.macroData.ppi_yoy}%</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Economic Sentiment</div>
+                            <div class="card-value">${curr.leadingIndicators.economicSentiment.value}</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Retail Sales</div>
+                            <div class="card-value">${curr.leadingIndicators.retailSales.value}%</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Labour Market Index</div>
+                            <div class="card-value">${curr.leadingIndicators.labourMarketIndex.value}</div>
+                        </div>
                     </div>
-                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">${r.time}</div>
-                </div>
-            `).join('');
-            document.getElementById('releasesContent').innerHTML = releases;
 
-            // UPDATE BOTTOM BAR
-            document.getElementById('currencyPair').textContent = fxPair;
-            document.getElementById('calendarCounts').textContent = `${allData.calendar.filter(c => !c.actual).length} released`;
-            document.getElementById('calendarUpcoming').textContent = `${allData.calendar.filter(c => c.actual).length} upcoming`;
+                    <!-- COL 2: THEMES -->
+                    <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
+                        ${curr.themes.map(t => `
+                            <div class="card">
+                                <div class="card-title">${t.name}</div>
+                                <div class="card-value">${t.value}${typeof t.value === 'number' ? '%' : ''}</div>
+                                <span style="display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; background: rgba(99, 102, 241, 0.2); color: var(--accent-neutral);">${t.sentiment}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- COL 3: FX PAIR -->
+                    <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
+                        <div class="card" style="padding: 30px; text-align: center; flex: 2;">
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 10px;">${selectedCurrency}/USD</div>
+                            <div style="font-size: 48px; font-weight: 700; font-family: 'Courier New', monospace; margin-bottom: 10px; color: var(--accent-down);">-1.60%</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Interest Differential</div>
+                            <div style="font-size: 10px; color: var(--text-muted); background: rgba(99, 102, 241, 0.1); padding: 8px; border-radius: 3px; margin-bottom: 10px;">2Y SPREAD: ${(curr.yieldCurve['2Y'] - 4.10).toFixed(2)}%</div>
+                            <span style="display: inline-block; padding: 4px 10px; border-radius: 3px; font-size: 10px; font-weight: 700; background: rgba(239, 68, 68, 0.2); color: var(--accent-down);">NEGATIVE</span>
+                        </div>
+                    </div>
+
+                    <!-- COL 4: RATE EXPECTATIONS -->
+                    <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
+                        <div class="card">
+                            <div class="card-title">Policy Rate</div>
+                            <div class="card-value">${curr.rate}%</div>
+                            <div class="card-subtitle">Current</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Inflation</div>
+                            <div class="card-value">${curr.inflation}%</div>
+                            <div class="card-subtitle">CPI YoY</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Core Inflation</div>
+                            <div class="card-value">${curr.macroData.coreInflation}%</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Unemployment</div>
+                            <div class="card-value">${curr.macroData.unemployment}%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('dashboard').innerHTML = html;
+        }
+
+        function renderOverview() {
+            let html = `
+                <h3 style="margin-bottom: 15px;">G10 Currencies Sentiment Heatmap</h3>
+                <div class="heatmap">
+            `;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                let heatClass = 'heat-neutral';
+                if (data.rateExpectation.next6m > data.rate) heatClass = 'heat-hot';
+                else if (data.rateExpectation.next6m < data.rate) heatClass = 'heat-cold';
+                
+                html += `
+                    <div class="heatmap-cell ${heatClass}">
+                        <div style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">${code}</div>
+                        <div style="font-size: 11px;">${data.rate}% → ${data.rateExpectation.next6m}%</div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('overview').innerHTML = html;
+        }
+
+        function renderInflation() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="data-row">
+                            <span class="data-label">CPI YoY</span>
+                            <span class="data-value">${data.macroData.cpi_yoy}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">CPI MoM</span>
+                            <span class="data-value">${data.macroData.cpi_mom}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Core CPI</span>
+                            <span class="data-value">${data.macroData.coreInflation}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">PPI YoY</span>
+                            <span class="data-value">${data.macroData.ppi_yoy}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">3M Ann</span>
+                            <span class="data-value">${data.macroData.cpi_3m}%</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('inflation').innerHTML = html;
+        }
+
+        function renderLabour() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="data-row">
+                            <span class="data-label">Unemployment</span>
+                            <span class="data-value">${data.macroData.unemployment}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Wage Growth</span>
+                            <span class="data-value">${data.macroData.wageGrowth}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Part. Rate</span>
+                            <span class="data-value">${data.macroData.participationRate}%</span>
+                        </div>
+                        ${data.macroData.nfp ? `
+                            <div class="data-row">
+                                <span class="data-label">NFP</span>
+                                <span class="data-value">${data.macroData.nfp > 0 ? '+' : ''}${(data.macroData.nfp / 1000).toFixed(0)}K</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('labour').innerHTML = html;
+        }
+
+        function renderPMI() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="data-row">
+                            <span class="data-label">Manufacturing</span>
+                            <span class="data-value">${data.macroData.manufacturingPmi}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Services</span>
+                            <span class="data-value">${data.macroData.servicesPmi}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Composite</span>
+                            <span class="data-value">${data.macroData.compositePmi}</span>
+                        </div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-muted);">
+                            ${data.macroData.manufacturingPmi > 50 ? '✅ Expanding' : '❌ Contracting'}
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('pmi').innerHTML = html;
+        }
+
+        function renderYields() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="data-row">
+                            <span class="data-label">2Y</span>
+                            <span class="data-value">${data.yieldCurve['2Y'].toFixed(2)}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">5Y</span>
+                            <span class="data-value">${data.yieldCurve['5Y'].toFixed(2)}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">10Y</span>
+                            <span class="data-value">${data.yieldCurve['10Y'].toFixed(2)}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">2s10s</span>
+                            <span class="data-value">${data.yieldCurve.spread_2s10s}bp</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('yields').innerHTML = html;
+        }
+
+        function renderRealYields() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="data-row">
+                            <span class="data-label">Real 10Y</span>
+                            <span class="data-value">${data.realYields.rea_10y.toFixed(2)}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Nominal 10Y</span>
+                            <span class="data-value">${data.realYields.nom_10y.toFixed(2)}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Breakeven</span>
+                            <span class="data-value">${data.realYields.tips_breakeven.toFixed(2)}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Term Premium</span>
+                            <span class="data-value">${data.realYields.termPremium.toFixed(2)}%</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('realyields').innerHTML = html;
+        }
+
+        function renderCOT() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                const cot = data.cot;
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="cot-chart">
+                            <div class="bar">
+                                <div class="bar-label">Commercial</div>
+                                <div class="bar-fill" style="width: ${50 + (cot.commercialPercent / 2)}%; background: ${cot.commercialPercent > 0 ? 'var(--accent-down)' : 'var(--accent-up)'}"></div>
+                                <div class="bar-value">${cot.commercialPercent}%</div>
+                            </div>
+                            <div class="bar">
+                                <div class="bar-label">Large Spec</div>
+                                <div class="bar-fill" style="width: ${50 + (cot.largeSpecPercent / 2)}%; background: ${cot.largeSpecPercent > 0 ? 'var(--accent-down)' : 'var(--accent-up)'}"></div>
+                                <div class="bar-value">${cot.largeSpecPercent}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('cot').innerHTML = html;
+        }
+
+        function renderCross() {
+            let html = `
+                <div class="selector">
+                    <select id="c1" onchange="renderCross()">
+                        ${Object.keys(allData.g10Data).map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
+                    <select id="c2" onchange="renderCross()">
+                        ${Object.keys(allData.g10Data).map(c => `<option value="${c}" ${c === 'EUR' ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="comparative">
+                    <div id="compareC1"></div>
+                    <div id="compareC2"></div>
+                </div>
+            `;
+            document.getElementById('cross').innerHTML = html;
+            
+            const c1 = document.getElementById('c1').value || 'USD';
+            const c2 = document.getElementById('c2').value || 'EUR';
+            
+            const d1 = allData.g10Data[c1];
+            const d2 = allData.g10Data[c2];
+            
+            let html1 = `<h3 style="margin-bottom: 15px; color: var(--accent-purple);">${c1}</h3><div class="card">`;
+            html1 += `<div class="data-row"><span class="data-label">Rate</span><span class="data-value">${d1.rate}%</span></div>`;
+            html1 += `<div class="data-row"><span class="data-label">Inflation</span><span class="data-value">${d1.inflation}%</span></div>`;
+            html1 += `<div class="data-row"><span class="data-label">Real 10Y</span><span class="data-value">${d1.realYields.rea_10y}%</span></div>`;
+            html1 += `<div class="data-row"><span class="data-label">Growth</span><span class="data-value">${d1.macroData.gdpGrowth}%</span></div>`;
+            html1 += `</div>`;
+            document.getElementById('compareC1').innerHTML = html1;
+            
+            let html2 = `<h3 style="margin-bottom: 15px; color: var(--accent-purple);">${c2}</h3><div class="card">`;
+            html2 += `<div class="data-row"><span class="data-label">Rate</span><span class="data-value">${d2.rate}%</span></div>`;
+            html2 += `<div class="data-row"><span class="data-label">Inflation</span><span class="data-value">${d2.inflation}%</span></div>`;
+            html2 += `<div class="data-row"><span class="data-label">Real 10Y</span><span class="data-value">${d2.realYields.rea_10y}%</span></div>`;
+            html2 += `<div class="data-row"><span class="data-label">Growth</span><span class="data-value">${d2.macroData.gdpGrowth}%</span></div>`;
+            html2 += `</div>`;
+            document.getElementById('compareC2').innerHTML = html2;
+        }
+
+        function renderCentralBank() {
+            let html = `<div class="grid">`;
+            for (const cb of allData.centralBanks) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">${cb.bank}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${cb.country}</div>
+                        <div class="data-row">
+                            <span class="data-label">Policy Rate</span>
+                            <span class="data-value">${cb.rate}%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Next Meeting</span>
+                            <span class="data-value" style="font-size: 11px;">${new Date(cb.nextMeeting).toLocaleDateString()}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Decision</span>
+                            <span style="padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; ${cb.decision === 'Hike' ? 'background: rgba(239, 68, 68, 0.2); color: var(--accent-down)' : cb.decision === 'Cut' ? 'background: rgba(16, 185, 129, 0.2); color: var(--accent-up)' : 'background: rgba(99, 102, 241, 0.2); color: var(--accent-neutral)'}">${cb.decision}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('centralbank').innerHTML = html;
+        }
+
+        function renderRisk() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                const risk = data.riskSentiment;
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="data-row">
+                            <span class="data-label">Vol (IV)</span>
+                            <span class="data-value">${risk.equity_implied_vol.toFixed(1)}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Risk Reversal</span>
+                            <span class="data-value">${risk.riskReversal_1m.toFixed(1)}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Put/Call</span>
+                            <span class="data-value">${risk.put_call_ratio.toFixed(2)}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Sentiment</span>
+                            <span style="padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; background: ${risk.riskSentiment === 'Risk-on' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${risk.riskSentiment === 'Risk-on' ? 'var(--accent-up)' : 'var(--accent-down)'}">${risk.riskSentiment}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('risk').innerHTML = html;
+        }
+
+        function renderSetups() {
+            let html = '';
+            for (const setup of allData.tradingSetups) {
+                html += `
+                    <div class="setup-card">
+                        <div class="setup-header">
+                            <div class="setup-name">${setup.name}</div>
+                            <div class="setup-confidence conf-${setup.confidence.toLowerCase()}">${setup.confidence} Confidence</div>
+                        </div>
+                        <div class="setup-details">
+                            <div><strong>Rationale:</strong> ${setup.rationale}</div>
+                            <div style="margin-top: 8px;"><strong>Entry:</strong> ${setup.entry} | <strong>Target:</strong> ${setup.target} | <strong>Stop:</strong> ${setup.stop}</div>
+                            <div style="margin-top: 8px;"><strong>R:R:</strong> ${setup.riskReward} | <strong>Timeframe:</strong> ${setup.timeframe}</div>
+                            <div style="margin-top: 8px;"><strong>Catalyst:</strong> ${setup.catalyst}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('setups').innerHTML = html;
+        }
+
+        function renderSurprises() {
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                const surp = data.surprises;
+                html += `
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--accent-purple);">${code}</div>
+                        <div class="data-row">
+                            <span class="data-label">Citi Surp Idx</span>
+                            <span class="data-value">${surp.cisiEconomicSurpriseIndex}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">NFP Surprise</span>
+                            <span class="data-value">${surp.nfpSurprise > 0 ? '+' : ''}${(surp.nfpSurprise / 1000).toFixed(0)}K</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">CPI Surprise</span>
+                            <span class="data-value">${surp.cpiSurprise.toFixed(1)}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Beat %</span>
+                            <span class="data-value">${surp.surveyBeatPercent}%</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('surprises').innerHTML = html;
+        }
+
+        function renderJuice() {
+            let html = `
+                <h3 style="margin-bottom: 15px;">💜 Financial Juice - Real-Time Macro Commentary</h3>
+                <div class="grid">
+            `;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 8px;">${code} ${data.flag}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
+                            <strong>Rate:</strong> ${data.rate}% | <strong>Next:</strong> ${data.rateExpectation.next6m}% (6m)<br>
+                            <strong>Inflation:</strong> ${data.inflation}% YoY | <strong>Growth:</strong> ${data.macroData.gdpGrowth}%<br>
+                            <strong>Real Yield:</strong> ${data.realYields.rea_10y}% | <strong>Surprise:</strong> ${data.surprises.cisiEconomicSurpriseIndex > 0 ? '✅ Beat' : '❌ Miss'}<br>
+                            <strong>Sentiment:</strong> <span style="padding: 2px 4px; border-radius: 2px; font-size: 10px; ${data.riskSentiment.riskSentiment === 'Risk-on' ? 'background: rgba(16, 185, 129, 0.2); color: var(--accent-up)' : 'background: rgba(239, 68, 68, 0.2); color: var(--accent-down)'}">${data.riskSentiment.riskSentiment}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('juice').innerHTML = html;
+        }
+
+        function renderNews() {
+            let html = '';
+            for (const item of allData.news) {
+                html += `
+                    <div class="news-item">
+                        <div class="news-title">${item.title}</div>
+                        <div class="news-meta">
+                            <span>${item.source} • ${item.category}</span>
+                            <span class="impact-badge impact-${item.impact.toLowerCase()}">${item.impact}</span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${item.summary}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('news').innerHTML = html;
+        }
+
+        function renderCalendar() {
+            let html = `<div class="grid">`;
+            for (const event of allData.calendar) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; font-weight: 700;">${new Date(event.date).toLocaleDateString()}</div>
+                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 8px;">${event.event}</div>
+                        <div class="data-row">
+                            <span class="data-label">Country</span>
+                            <span class="data-value" style="font-size: 12px;">${event.country}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Forecast</span>
+                            <span class="data-value">${event.forecast}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Previous</span>
+                            <span class="data-value">${event.previous}</span>
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <span style="padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; background: ${event.importance === 'High' ? 'rgba(239, 68, 68, 0.2); color: var(--accent-down)' : 'rgba(99, 102, 241, 0.2); color: var(--accent-neutral)'}">${event.importance}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            document.getElementById('calendar').innerHTML = html;
+        }
+
+        function renderAllTabs() {
+            renderTopBar();
+            renderDashboard();
+            renderOverview();
+            renderInflation();
+            renderLabour();
+            renderPMI();
+            renderYields();
+            renderRealYields();
+            renderCOT();
+            renderCross();
+            renderCentralBank();
+            renderRisk();
+            renderSetups();
+            renderSurprises();
+            renderJuice();
+            renderNews();
+            renderCalendar();
         }
 
         // INITIAL LOAD
         fetchData();
-        setInterval(fetchData, 30000);
+        setInterval(fetchData, 60000);
     </script>
 </body>
 </html>
