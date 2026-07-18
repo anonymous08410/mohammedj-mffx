@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate G10 Macro Dashboard</title>
+    <title>Ultimate G10 Macro Dashboard Pro</title>
     <style>
         * {
             margin: 0;
@@ -133,11 +133,6 @@
             margin-bottom: 4px;
         }
 
-        .card-subtitle {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
         .data-row {
             display: flex;
             justify-content: space-between;
@@ -155,13 +150,117 @@
             font-family: 'Courier New', monospace;
         }
 
-        .error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: var(--accent-down);
-            padding: 20px;
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .heatmap-cell {
+            padding: 15px;
             border-radius: 4px;
             text-align: center;
+            font-weight: 600;
+        }
+
+        .heat-score {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .heat-label {
+            font-size: 10px;
+            color: inherit;
+            opacity: 0.8;
+        }
+
+        .score-1 { background: rgba(239, 68, 68, 0.3); color: var(--accent-down); }
+        .score-2 { background: rgba(245, 158, 11, 0.3); color: #f59e0b; }
+        .score-3 { background: rgba(99, 102, 241, 0.3); color: var(--accent-neutral); }
+        .score-4 { background: rgba(59, 130, 246, 0.3); color: #3b82f6; }
+        .score-5 { background: rgba(16, 185, 129, 0.3); color: var(--accent-up); }
+
+        .pair-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .pair-cell {
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+            border: 2px solid;
+        }
+
+        .pair-strong { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.5); color: var(--accent-up); }
+        .pair-neutral { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.5); color: var(--accent-neutral); }
+        .pair-weak { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.5); color: var(--accent-down); }
+
+        .pair-name {
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .pair-change {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .scorecard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .scorecard-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .scorecard-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-purple);
+            margin-bottom: 12px;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+        }
+
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .score-bar-bg {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-down), var(--accent-neutral), var(--accent-up));
+            border-radius: 3px;
         }
 
         .selector {
@@ -170,7 +269,7 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        
+
         .selector > div {
             display: flex;
             align-items: center;
@@ -204,32 +303,38 @@
 
         <div class="tabs">
             <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+            <div class="tab" onclick="switchTab('heatmap')">🔥 Strength Heat</div>
+            <div class="tab" onclick="switchTab('pairs')">💱 Pair Matrix</div>
+            <div class="tab" onclick="switchTab('score')">⭐ Score Card</div>
+            <div class="tab" onclick="switchTab('riskreward')">🎯 Risk/Reward</div>
+            <div class="tab" onclick="switchTab('surprise')">💥 Surprises</div>
+            <div class="tab" onclick="switchTab('positioning')">📍 Positioning</div>
+            <div class="tab" onclick="switchTab('juice')">💜 Juice</div>
+            <div class="tab" onclick="switchTab('history')">📊 CPI History</div>
+            <div class="tab" onclick="switchTab('calendar')">📅 Calendar</div>
             <div class="tab" onclick="switchTab('overview')">🌍 Overview</div>
             <div class="tab" onclick="switchTab('inflation')">📈 Inflation</div>
             <div class="tab" onclick="switchTab('labour')">👥 Labour</div>
             <div class="tab" onclick="switchTab('pmi')">🏭 PMI</div>
             <div class="tab" onclick="switchTab('yields')">📉 Yields</div>
-            <div class="tab" onclick="switchTab('realyields')">💰 Real Yields</div>
-            <div class="tab" onclick="switchTab('cot')">📍 COT</div>
-            <div class="tab" onclick="switchTab('cross')">🔄 Cross</div>
-            <div class="tab" onclick="switchTab('juice')">💜 Juice</div>
-            <div class="tab" onclick="switchTab('history')">📊 CPI History</div>
-            <div class="tab" onclick="switchTab('calendar')">📅 Calendar</div>
             <div class="tab" onclick="switchTab('news')">📰 News</div>
         </div>
 
         <div id="dashboard" class="content active"></div>
+        <div id="heatmap" class="content"></div>
+        <div id="pairs" class="content"></div>
+        <div id="score" class="content"></div>
+        <div id="riskreward" class="content"></div>
+        <div id="surprise" class="content"></div>
+        <div id="positioning" class="content"></div>
+        <div id="juice" class="content"></div>
+        <div id="history" class="content"></div>
+        <div id="calendar" class="content"></div>
         <div id="overview" class="content"></div>
         <div id="inflation" class="content"></div>
         <div id="labour" class="content"></div>
         <div id="pmi" class="content"></div>
         <div id="yields" class="content"></div>
-        <div id="realyields" class="content"></div>
-        <div id="cot" class="content"></div>
-        <div id="cross" class="content"></div>
-        <div id="juice" class="content"></div>
-        <div id="history" class="content"></div>
-        <div id="calendar" class="content"></div>
         <div id="news" class="content"></div>
     </div>
 
@@ -241,21 +346,12 @@
 
         async function initDashboard() {
             try {
-                console.log('Fetching from:', API_URL + '/api/dashboard');
                 const res = await fetch(`${API_URL}/api/dashboard`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 allData = await res.json();
-                console.log('Data loaded:', allData);
                 renderAllTabs();
             } catch (e) {
                 console.error('Error:', e);
-                document.getElementById('dashboard').innerHTML = `
-                    <div class="error">
-                        <h3>Failed to load data</h3>
-                        <p>${e.message}</p>
-                        <p style="margin-top: 10px; font-size: 11px;">Backend URL: ${API_URL}/api/dashboard</p>
-                    </div>
-                `;
             }
         }
 
@@ -275,8 +371,28 @@
                 <div class="stat"><span>Gold</span><span class="stat-value">$${stats.gold.value}</span></div>
                 <div class="stat"><span>DXY</span><span class="stat-value">${stats.dxy.value}</span></div>
                 <div class="stat"><span>VIX</span><span class="stat-value">${stats.vix.value}</span></div>
+                <div class="stat"><span>HY OAS</span><span class="stat-value">${stats.usHY}bp</span></div>
             `;
             document.getElementById('topBar').innerHTML = html;
+        }
+
+        function getMacroScore(data) {
+            // Score 1-10 based on macro metrics
+            let score = 5;
+            if (data.macroData.gdpGrowth > 1) score += 1;
+            if (data.macroData.unemployment < 4) score += 1;
+            if (data.inflation < 3) score += 0.5;
+            if (data.realYields.rea_10y > 1.5) score += 1;
+            if (data.rate > 3.5) score += 0.5;
+            return Math.min(10, score).toFixed(1);
+        }
+
+        function getScoreClass(score) {
+            if (score >= 8) return 'score-5';
+            if (score >= 6.5) return 'score-4';
+            if (score >= 5) return 'score-3';
+            if (score >= 3) return 'score-2';
+            return 'score-1';
         }
 
         function renderDashboard() {
@@ -305,7 +421,7 @@
 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; height: calc(100% - 40px);">
                     <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
-                        <div style="font-size: 11px; color: var(--accent-purple); font-weight: 700;">${dashboardCurrencyLeft}</div>
+                        <div style="font-size: 11px; color: var(--accent-purple); font-weight: 700; margin-bottom: 8px;">⭐ ${dashboardCurrencyLeft} - Score: ${getMacroScore(currLeft)}/10</div>
                         <div class="card">
                             <div class="card-title">Policy Rate</div>
                             <div class="card-value">${currLeft.rate}%</div>
@@ -315,8 +431,8 @@
                             <div class="card-value">${currLeft.inflation}%</div>
                         </div>
                         <div class="card">
-                            <div class="card-title">Unemployment</div>
-                            <div class="card-value">${currLeft.macroData.unemployment}%</div>
+                            <div class="card-title">Real 10Y</div>
+                            <div class="card-value">${currLeft.realYields.rea_10y}%</div>
                         </div>
                     </div>
 
@@ -326,8 +442,8 @@
                             <div class="card-value">${currLeft.macroData.gdpGrowth}%</div>
                         </div>
                         <div class="card">
-                            <div class="card-title">Wage Growth</div>
-                            <div class="card-value">${currLeft.macroData.wageGrowth}%</div>
+                            <div class="card-title">Unemployment</div>
+                            <div class="card-value">${currLeft.macroData.unemployment}%</div>
                         </div>
                         <div class="card">
                             <div class="card-title">Manufacturing PMI</div>
@@ -340,11 +456,14 @@
                             <div style="font-size: 20px; font-weight: 700; color: var(--accent-purple); margin-bottom: 15px;">${dashboardCurrencyLeft}/${dashboardCurrencyRight}</div>
                             <div style="font-size: 42px; font-weight: 700; font-family: 'Courier New', monospace; color: ${rateDiff < 0 ? 'var(--accent-down)' : 'var(--accent-up)'};">${rateDiff < 0 ? '' : '+'}${rateDiff.toFixed(2)}%</div>
                             <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">Rate Differential</div>
+                            <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px; padding: 8px; background: rgba(99, 102, 241, 0.1); border-radius: 3px;">
+                                2Y Spread: ${(currLeft.yieldCurve['2Y'] - currRight.yieldCurve['2Y']).toFixed(2)}%
+                            </div>
                         </div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
-                        <div style="font-size: 11px; color: var(--accent-purple); font-weight: 700;">${dashboardCurrencyRight}</div>
+                        <div style="font-size: 11px; color: var(--accent-purple); font-weight: 700; margin-bottom: 8px;">⭐ ${dashboardCurrencyRight} - Score: ${getMacroScore(currRight)}/10</div>
                         <div class="card">
                             <div class="card-title">Policy Rate</div>
                             <div class="card-value">${currRight.rate}%</div>
@@ -354,8 +473,8 @@
                             <div class="card-value">${currRight.inflation}%</div>
                         </div>
                         <div class="card">
-                            <div class="card-title">Unemployment</div>
-                            <div class="card-value">${currRight.macroData.unemployment}%</div>
+                            <div class="card-title">Real 10Y</div>
+                            <div class="card-value">${currRight.realYields.rea_10y}%</div>
                         </div>
                     </div>
                 </div>
@@ -363,330 +482,257 @@
             document.getElementById('dashboard').innerHTML = html;
         }
 
-        function renderOverview() {
+        function renderHeatmap() {
             if (!allData.g10Data) return;
-            let html = '<h3 style="margin-bottom: 15px;">G10 Currencies</h3><div class="grid">';
-            for (const [code, data] of Object.entries(allData.g10Data)) {
-                html += `
-                    <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
-                        <div class="data-row"><span class="data-label">Rate</span><span class="data-value">${data.rate}%</span></div>
-                        <div class="data-row"><span class="data-label">Inflation</span><span class="data-value">${data.inflation}%</span></div>
-                        <div class="data-row"><span class="data-label">Growth</span><span class="data-value">${data.macroData.gdpGrowth}%</span></div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            document.getElementById('overview').innerHTML = html;
-        }
-
-        function renderInflation() {
-            if (!allData.g10Data) return;
-            let html = '<div class="grid">';
-            for (const [code, data] of Object.entries(allData.g10Data)) {
-                html += `
-                    <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
-                        <div class="data-row"><span class="data-label">CPI YoY</span><span class="data-value">${data.macroData.cpi_yoy}%</span></div>
-                        <div class="data-row"><span class="data-label">CPI MoM</span><span class="data-value">${data.macroData.cpi_mom}%</span></div>
-                        <div class="data-row"><span class="data-label">Core CPI</span><span class="data-value">${data.macroData.coreInflation}%</span></div>
-                        <div class="data-row"><span class="data-label">PPI YoY</span><span class="data-value">${data.macroData.ppi_yoy}%</span></div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            document.getElementById('inflation').innerHTML = html;
-        }
-
-        function renderLabour() {
-            if (!allData.g10Data) return;
-            let html = '<div class="grid">';
-            for (const [code, data] of Object.entries(allData.g10Data)) {
-                html += `
-                    <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
-                        <div class="data-row"><span class="data-label">Unemployment</span><span class="data-value">${data.macroData.unemployment}%</span></div>
-                        <div class="data-row"><span class="data-label">Wage Growth</span><span class="data-value">${data.macroData.wageGrowth}%</span></div>
-                        <div class="data-row"><span class="data-label">Participation</span><span class="data-value">${data.macroData.participationRate}%</span></div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            document.getElementById('labour').innerHTML = html;
-        }
-
-        function renderPMI() {
-            if (!allData.g10Data) return;
-            let html = '<div class="grid">';
-            for (const [code, data] of Object.entries(allData.g10Data)) {
-                html += `
-                    <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
-                        <div class="data-row"><span class="data-label">Manufacturing</span><span class="data-value">${data.macroData.manufacturingPmi}</span></div>
-                        <div class="data-row"><span class="data-label">Services</span><span class="data-value">${data.macroData.servicesPmi}</span></div>
-                        <div class="data-row"><span class="data-label">Composite</span><span class="data-value">${data.macroData.compositePmi}</span></div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            document.getElementById('pmi').innerHTML = html;
-        }
-
-        function renderYields() {
-            if (!allData.g10Data) return;
-            let html = '<div class="grid">';
-            for (const [code, data] of Object.entries(allData.g10Data)) {
-                html += `
-                    <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
-                        <div class="data-row"><span class="data-label">2Y</span><span class="data-value">${data.yieldCurve['2Y'].toFixed(2)}%</span></div>
-                        <div class="data-row"><span class="data-label">5Y</span><span class="data-value">${data.yieldCurve['5Y'].toFixed(2)}%</span></div>
-                        <div class="data-row"><span class="data-label">10Y</span><span class="data-value">${data.yieldCurve['10Y'].toFixed(2)}%</span></div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            document.getElementById('yields').innerHTML = html;
-        }
-
-        function renderRealYields() {
-            if (!allData.g10Data) return;
-            let html = '<div class="grid">';
-            for (const [code, data] of Object.entries(allData.g10Data)) {
-                html += `
-                    <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
-                        <div class="data-row"><span class="data-label">Real 10Y</span><span class="data-value">${data.realYields.rea_10y.toFixed(2)}%</span></div>
-                        <div class="data-row"><span class="data-label">Nominal 10Y</span><span class="data-value">${data.realYields.nom_10y.toFixed(2)}%</span></div>
-                        <div class="data-row"><span class="data-label">Breakeven</span><span class="data-value">${data.realYields.tips_breakeven.toFixed(2)}%</span></div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            document.getElementById('realyields').innerHTML = html;
-        }
-
-        function renderCOT() {
-            if (!allData.g10Data) return;
-            let html = '<div class="grid">';
-            for (const [code, data] of Object.entries(allData.g10Data)) {
-                html += `
-                    <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
-                        <div class="data-row"><span class="data-label">Commercial %</span><span class="data-value">${data.cot.commercialPercent}%</span></div>
-                        <div class="data-row"><span class="data-label">Large Spec %</span><span class="data-value">${data.cot.largeSpecPercent}%</span></div>
-                        <div class="data-row"><span class="data-label">Open Interest</span><span class="data-value">${(data.cot.totalOpenInterest / 1000).toFixed(0)}K</span></div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            document.getElementById('cot').innerHTML = html;
-        }
-
-        function renderCross() {
-            let html = `
-                <div class="selector">
-                    <div>
-                        <label style="font-size: 11px; font-weight: 700;">Currency 1:</label>
-                        <select id="c1" onchange="updateCross()" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
-                            ${Object.keys(allData.g10Data).map(c => `<option value="${c}" ${c === 'USD' ? 'selected' : ''}>${c}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size: 11px; font-weight: 700;">Currency 2:</label>
-                        <select id="c2" onchange="updateCross()" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
-                            ${Object.keys(allData.g10Data).map(c => `<option value="${c}" ${c === 'EUR' ? 'selected' : ''}>${c}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div id="crossComparison" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;"></div>
-            `;
-            document.getElementById('cross').innerHTML = html;
-            updateCross();
-        }
-
-        function updateCross() {
-            const c1 = document.getElementById('c1').value;
-            const c2 = document.getElementById('c2').value;
-            const d1 = allData.g10Data[c1];
-            const d2 = allData.g10Data[c2];
+            let html = `<h3 style="margin-bottom: 20px;">🔥 Macro Strength Heatmap</h3><div class="heatmap">`;
             
-            let html = `
-                <div>
-                    <h3 style="margin-bottom: 15px; color: var(--accent-purple);">${c1}</h3>
-                    <div class="card">
-                        <div class="data-row"><span class="data-label">Rate</span><span class="data-value">${d1.rate}%</span></div>
-                        <div class="data-row"><span class="data-label">Inflation</span><span class="data-value">${d1.inflation}%</span></div>
-                        <div class="data-row"><span class="data-label">Growth</span><span class="data-value">${d1.macroData.gdpGrowth}%</span></div>
-                        <div class="data-row"><span class="data-label">Unemployment</span><span class="data-value">${d1.macroData.unemployment}%</span></div>
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                const score = getMacroScore(data);
+                const scoreClass = getScoreClass(score);
+                html += `
+                    <div class="heatmap-cell ${scoreClass}">
+                        <div class="heat-score">${score}</div>
+                        <div class="heat-label">${code}</div>
+                        <div class="heat-label" style="font-size: 9px; margin-top: 2px;">${data.rate}% | ${data.inflation}% inflation</div>
                     </div>
-                </div>
-                <div>
-                    <h3 style="margin-bottom: 15px; color: var(--accent-purple);">${c2}</h3>
-                    <div class="card">
-                        <div class="data-row"><span class="data-label">Rate</span><span class="data-value">${d2.rate}%</span></div>
-                        <div class="data-row"><span class="data-label">Inflation</span><span class="data-value">${d2.inflation}%</span></div>
-                        <div class="data-row"><span class="data-label">Growth</span><span class="data-value">${d2.macroData.gdpGrowth}%</span></div>
-                        <div class="data-row"><span class="data-label">Unemployment</span><span class="data-value">${d2.macroData.unemployment}%</span></div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('heatmap').innerHTML = html;
+        }
+
+        function renderPairMatrix() {
+            if (!allData.g10Data) return;
+            const currencies = Object.keys(allData.g10Data);
+            let html = `<h3 style="margin-bottom: 20px;">💱 Currency Pair Strength Matrix</h3><div class="pair-matrix">`;
+            
+            const pairs = [
+                ['EUR', 'USD'], ['GBP', 'USD'], ['USD', 'JPY'], ['AUD', 'USD'],
+                ['USD', 'CAD'], ['NZD', 'USD'], ['EUR', 'JPY'], ['AUD', 'NZD'],
+                ['GBP', 'JPY'], ['EUR', 'GBP'], ['AUD', 'CAD'], ['USD', 'CHF']
+            ];
+
+            for (const [c1, c2] of pairs) {
+                const d1 = allData.g10Data[c1];
+                const d2 = allData.g10Data[c2];
+                if (!d1 || !d2) continue;
+
+                const rateDiff = d1.rate - d2.rate;
+                const realYieldDiff = d1.realYields.rea_10y - d2.realYields.rea_10y;
+                const strength = rateDiff + realYieldDiff;
+
+                let pairClass = 'pair-neutral';
+                let pairSign = '';
+                if (strength > 1) {
+                    pairClass = 'pair-strong';
+                    pairSign = '↑';
+                } else if (strength < -1) {
+                    pairClass = 'pair-weak';
+                    pairSign = '↓';
+                }
+
+                html += `
+                    <div class="pair-cell ${pairClass}">
+                        <div class="pair-name">${c1}/${c2}</div>
+                        <div class="pair-change">${pairSign}${strength.toFixed(2)}%</div>
                     </div>
-                </div>
-            `;
-            document.getElementById('crossComparison').innerHTML = html;
+                `;
+            }
+            html += '</div>';
+            document.getElementById('pairs').innerHTML = html;
+        }
+
+        function renderScoreCard() {
+            if (!allData.g10Data) return;
+            let html = `<h3 style="margin-bottom: 20px;">⭐ Macro Scorecard - Each Currency Rated</h3><div class="scorecard">`;
+            
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                const score = getMacroScore(data);
+                const inflationScore = 10 - Math.min(data.inflation * 2, 10);
+                const growthScore = Math.min(data.macroData.gdpGrowth * 10, 10);
+                const labourScore = 10 - Math.min(data.macroData.unemployment * 1.5, 10);
+                const realYieldScore = Math.min(data.realYields.rea_10y * 4, 10);
+
+                html += `
+                    <div class="scorecard-item">
+                        <div class="scorecard-header">${code} - ${score}/10 Overall</div>
+                        
+                        <div class="score-row">
+                            <span>Inflation</span>
+                            <div class="score-bar">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar-fill" style="width: ${inflationScore}%"></div>
+                                </div>
+                                <span style="min-width: 20px; text-align: right;">${data.inflation}%</span>
+                            </div>
+                        </div>
+
+                        <div class="score-row">
+                            <span>Growth</span>
+                            <div class="score-bar">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar-fill" style="width: ${growthScore}%"></div>
+                                </div>
+                                <span style="min-width: 20px; text-align: right;">${data.macroData.gdpGrowth}%</span>
+                            </div>
+                        </div>
+
+                        <div class="score-row">
+                            <span>Labour</span>
+                            <div class="score-bar">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar-fill" style="width: ${labourScore}%"></div>
+                                </div>
+                                <span style="min-width: 20px; text-align: right;">${data.macroData.unemployment}%</span>
+                            </div>
+                        </div>
+
+                        <div class="score-row" style="border-bottom: none;">
+                            <span>Real Yields</span>
+                            <div class="score-bar">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar-fill" style="width: ${realYieldScore}%"></div>
+                                </div>
+                                <span style="min-width: 20px; text-align: right;">${data.realYields.rea_10y}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('score').innerHTML = html;
+        }
+
+        function renderRiskReward() {
+            if (!allData.tradingSetups) return;
+            let html = `<h3 style="margin-bottom: 20px;">🎯 Risk/Reward Opportunities</h3>`;
+            
+            for (const setup of allData.tradingSetups) {
+                const riskAmount = setup.entry - setup.stop;
+                const rewardAmount = setup.target - setup.entry;
+                const rr = (rewardAmount / riskAmount).toFixed(2);
+
+                html += `
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple);">${setup.name}</div>
+                            <span style="padding: 4px 10px; border-radius: 3px; font-size: 10px; font-weight: 700; background: ${setup.confidence === 'High' ? 'rgba(16, 185, 129, 0.2); color: var(--accent-up)' : setup.confidence === 'Medium' ? 'rgba(245, 158, 11, 0.2); color: #f59e0b' : 'rgba(239, 68, 68, 0.2); color: var(--accent-down)'}">${setup.confidence}</span>
+                        </div>
+                        <div class="data-row"><span class="data-label">Entry</span><span class="data-value">${setup.entry}</span></div>
+                        <div class="data-row"><span class="data-label">Target</span><span class="data-value">${setup.target}</span></div>
+                        <div class="data-row"><span class="data-label">Stop</span><span class="data-value">${setup.stop}</span></div>
+                        <div class="data-row"><span class="data-label">R:R</span><span class="data-value">1:${rr}</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span class="data-label">Timeframe</span><span class="data-value" style="font-size: 11px;">${setup.timeframe}</span></div>
+                    </div>
+                `;
+            }
+            document.getElementById('riskreward').innerHTML = html;
+        }
+
+        function renderSurprises() {
+            if (!allData.g10Data) return;
+            let html = `<h3 style="margin-bottom: 20px;">💥 Economic Surprise Index - Who's Beating?</h3><div class="grid">`;
+            
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                const surp = data.surprises;
+                const surprise = surp.cisiEconomicSurpriseIndex;
+                let surpriseClass = 'score-3';
+                if (surprise > 50) surpriseClass = 'score-5';
+                else if (surprise > 20) surpriseClass = 'score-4';
+                else if (surprise < -20) surpriseClass = 'score-2';
+                else if (surprise < -50) surpriseClass = 'score-1';
+
+                html += `
+                    <div class="card">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
+                        <div style="padding: 15px; border-radius: 4px; text-align: center; background: rgba(99, 102, 241, 0.1); margin-bottom: 10px;">
+                            <div style="font-size: 24px; font-weight: 700; color: ${surprise > 0 ? 'var(--accent-up)' : 'var(--accent-down)'};">${surprise > 0 ? '+' : ''}${surprise}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Surprise Index</div>
+                        </div>
+                        <div class="data-row"><span class="data-label">Beat %</span><span class="data-value">${surp.surveyBeatPercent}%</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span class="data-label">Status</span><span style="font-size: 10px; font-weight: 700;">${surprise > 0 ? '✅ Beating' : '❌ Missing'}</span></div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('surprise').innerHTML = html;
+        }
+
+        function renderPositioning() {
+            if (!allData.g10Data) return;
+            let html = `<h3 style="margin-bottom: 20px;">📍 Institutional Positioning (COT)</h3><div class="grid">`;
+            
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                const cot = data.cot;
+                html += `
+                    <div class="card">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 12px;">${code}</div>
+                        <div style="margin-bottom: 10px;">
+                            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">COMMERCIAL</div>
+                            <div style="height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; width: ${50 + Math.min(Math.max(cot.commercialPercent, -50), 50)}%; background: ${cot.commercialPercent > 0 ? 'var(--accent-down)' : 'var(--accent-up)'}; border-radius: 4px;"></div>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-muted); margin-top: 2px;">${cot.commercialPercent}%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">LARGE SPEC</div>
+                            <div style="height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; width: ${50 + Math.min(Math.max(cot.largeSpecPercent, -50), 50)}%; background: ${cot.largeSpecPercent > 0 ? 'var(--accent-down)' : 'var(--accent-up)'}; border-radius: 4px;"></div>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-muted); margin-top: 2px;">${cot.largeSpecPercent}%</div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('positioning').innerHTML = html;
         }
 
         function renderJuice() {
             if (!allData.g10Data || !allData.news) return;
+            let html = `<h3 style="margin-bottom: 20px;">💜 Financial Juice</h3>`;
             
-            let html = `<h3 style="margin-bottom: 20px;">💜 Financial Juice - Macro Updates & Headlines</h3>`;
-            
-            // Create macro commentary for each currency
             const commentary = {
-                USD: {
-                    view: 'Fed holding 3.75%. Inflation at 4.2% - sticky but falling. NFP beat expectations (206K). Real yields at 1.85% - attractive for carry trades. Policy path uncertain post-Warsh.',
-                    setup: 'USD strength on real yield advantage. Watch for inflation surprise next month.'
-                },
-                EUR: {
-                    view: 'ECB on pause at 2.25%. Eurozone weakness (0.1% growth) argues for cuts by end-2026. Manufacturing PMI 48.5 - contracting. Real yields 0.65% - unattractive.',
-                    setup: 'EUR underperformance likely. EUR/USD downside risks to 1.06. Policy divergence trade vs USD.'
-                },
-                GBP: {
-                    view: 'BoE holding at 3.75%. UK labour market strong (5.2% wage growth). Inflation sticky at 3.8%. MPC divided but eventual cuts expected. Curve flat (2s10s: 0bp).',
-                    setup: 'GBP supported by labour strength but vulnerable if growth stalls. Cable near 1.27.'
-                },
-                JPY: {
-                    view: 'BoJ hiking to 1.00% (first move in cycle). Yen weak at 160 level - MoF intervention risk. Deflation concerns persist (CPI 1.9%). USD/JPY carry still attractive.',
-                    setup: 'Intervention risk near 160. BoJ data-dependent. Watch for Fed pivot risk.'
-                },
-                CAD: {
-                    view: 'BoC cutting aggressively (50bps expected this year). Labour market deteriorating (6.0% unemployment, -40K jobs). CPI 2.7%, declining. Real yields 1.55%.',
-                    setup: 'CAD weakness structural. USD/CAD 1.38 target. Commodity-linked but domestic weakness dominant.'
-                },
-                AUD: {
-                    view: 'RBA on hold at 3.60%. Commodity super-cycle intact (China stimulus). Labour tight (3.8% unemployment). Wage growth 4.2%. Real yields 0.95% (vs USD 1.85%).',
-                    setup: 'AUD supported by commodity cycle. Policy divergence vs Fed. AUD/USD 0.71 target.'
-                },
-                NZD: {
-                    view: 'RBNZ cutting this year (to 3.75% by year-end). Growth weak (0.1%), labour stable (3.6% unemployment). CPI falling (3.1%). Commodity dependent like AUD.',
-                    setup: 'NZD underperformance likely on rate cuts. NZD/USD 0.65 target vs current 0.62.'
-                },
-                CHF: {
-                    view: 'SNB cutting bias (1.50% current). Switzerland safe-haven demand high. Inflation low (1.4%), growth stalled (0.0%). Franc strength on geopolitical risk.',
-                    setup: 'CHF outperformer on safety. Real yields 0.45% but will compress with cuts.'
-                }
+                USD: 'Fed holding 3.75%. Inflation sticky at 4.2%. Real yields 1.85% - carry attractive. Policy path data-dependent.',
+                EUR: 'ECB on pause (2.25%). Eurozone weak (0.1% growth). Manufacturing PMI 48.5. EUR underperformer vs USD.',
+                GBP: 'BoE hold at 3.75%. Wage growth 5.2% - labour strength. Inflation sticky 3.8%. MPC eventual cuts.',
+                JPY: 'BoJ hike to 1.00%. Yen weak 160 level - intervention risk. Deflation concerns. Carry attractive.',
+                CAD: 'BoC cuts aggressively. Labour deteriorating (-40K jobs). CPI 2.7% declining. Weakness structural.',
+                AUD: 'RBA hold 3.60%. Commodity cycle intact. Labour tight 3.8%. Policy divergence vs Fed.',
+                NZD: 'RBNZ cutting (to 3.75% by year-end). Growth weak. Commodity-dependent like AUD.',
+                CHF: 'SNB cutting bias (1.50%). Safe-haven demand high. Inflation low 1.4%. Franc outperformer.'
             };
 
-            // Group news by currency
-            const newsByCountry = {
-                USD: [],
-                EUR: [],
-                GBP: [],
-                JPY: [],
-                CAD: [],
-                AUD: [],
-                NZD: [],
-                CHF: []
-            };
-
-            // Simple categorization of news
-            allData.news.forEach(news => {
-                if (news.title.includes('Fed') || news.category === 'Fed' || news.title.includes('US') || news.title.includes('USD')) {
-                    newsByCountry.USD.push(news);
-                } else if (news.title.includes('ECB') || news.category === 'ECB' || news.title.includes('Euro')) {
-                    newsByCountry.EUR.push(news);
-                } else if (news.title.includes('BoE') || news.category === 'BoE' || news.title.includes('Bank of England')) {
-                    newsByCountry.GBP.push(news);
-                } else if (news.title.includes('BoJ') || news.category === 'BoJ' || news.title.includes('Yen') || news.title.includes('JPY')) {
-                    newsByCountry.JPY.push(news);
-                } else if (news.title.includes('CAD') || news.title.includes('BoC') || news.title.includes('Canada')) {
-                    newsByCountry.CAD.push(news);
-                } else if (news.title.includes('AUD') || news.title.includes('RBA') || news.title.includes('Australia')) {
-                    newsByCountry.AUD.push(news);
-                } else if (news.title.includes('NZD') || news.title.includes('RBNZ') || news.title.includes('Zealand')) {
-                    newsByCountry.NZD.push(news);
-                } else if (news.title.includes('CHF') || news.title.includes('SNB') || news.title.includes('Switzerland')) {
-                    newsByCountry.CHF.push(news);
-                }
-            });
-
-            // Render each currency with commentary + news
             for (const [code, data] of Object.entries(allData.g10Data)) {
-                const view = commentary[code];
-                const currNews = newsByCountry[code] || [];
-                
                 html += `
-                    <div class="card" style="margin-bottom: 20px; padding: 20px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                            <div style="font-size: 24px; font-weight: 700; color: var(--accent-purple); width: 40px;">${code}</div>
-                            <div>
-                                <div style="font-size: 12px; font-weight: 700; color: var(--text-primary);">Policy Rate: ${data.rate}% | Inflation: ${data.inflation}%</div>
-                                <div style="font-size: 10px; color: var(--text-muted);">Real 10Y: ${data.realYields.rea_10y}% | Next: ${data.rateExpectation.next6m}%</div>
-                            </div>
-                        </div>
-
-                        <div style="background: rgba(99, 102, 241, 0.05); padding: 12px; border-radius: 4px; margin-bottom: 15px; border-left: 3px solid var(--accent-neutral);">
-                            <div style="font-size: 11px; font-weight: 700; color: var(--accent-neutral); margin-bottom: 6px; text-transform: uppercase;">Macro View</div>
-                            <div style="font-size: 12px; line-height: 1.6; color: var(--text-secondary);">${view.view}</div>
-                        </div>
-
-                        <div style="background: rgba(167, 139, 250, 0.05); padding: 12px; border-radius: 4px; margin-bottom: 15px; border-left: 3px solid var(--accent-purple);">
-                            <div style="font-size: 11px; font-weight: 700; color: var(--accent-purple); margin-bottom: 6px; text-transform: uppercase;">Trading Setup</div>
-                            <div style="font-size: 12px; line-height: 1.6; color: var(--text-secondary);">${view.setup}</div>
-                        </div>
-
-                        ${currNews.length > 0 ? `
-                            <div style="border-top: 1px solid var(--border); padding-top: 12px;">
-                                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase;">📰 Recent Headlines</div>
-                                ${currNews.slice(0, 2).map(news => `
-                                    <div style="margin-bottom: 8px; padding: 8px; background: rgba(${news.impact === 'High' ? '239, 68, 68' : '245, 158, 11'}, 0.1); border-radius: 3px;">
-                                        <div style="font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px;">${news.title}</div>
-                                        <div style="font-size: 10px; color: var(--text-muted);">${news.source} • ${news.category}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 8px;">${code}</div>
+                        <div style="font-size: 12px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 10px;">${commentary[code]}</div>
+                        <div class="data-row"><span class="data-label">Rate</span><span class="data-value">${data.rate}%</span></div>
+                        <div class="data-row"><span class="data-label">Real 10Y</span><span class="data-value">${data.realYields.rea_10y}%</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span class="data-label">Score</span><span class="data-value">${getMacroScore(data)}/10</span></div>
                     </div>
                 `;
             }
-
             document.getElementById('juice').innerHTML = html;
         }
 
         function renderHistory() {
             if (!allData.g10Data) return;
-            let html = `<h3 style="margin-bottom: 20px;">📊 CPI History - Last 3 Months</h3><div class="grid">`;
+            let html = `<h3 style="margin-bottom: 20px;">📊 CPI History</h3><div class="grid">`;
+            
             for (const [code, data] of Object.entries(allData.g10Data)) {
-                // Simulate last 3 months of CPI
                 const current = data.macroData.cpi_yoy;
                 const prev1 = (current - 0.3).toFixed(1);
                 const prev2 = (current - 0.6).toFixed(1);
-                const prev3 = (current - 0.9).toFixed(1);
                 
                 html += `
                     <div class="card">
-                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 15px;">${code} CPI</div>
-                        <div style="font-size: 12px; line-height: 2.2;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-weight: 600;">${prev3}%</span>
-                                <span style="color: var(--text-muted);">(3M ago)</span>
-                            </div>
-                            <div style="text-align: center; font-weight: 700; color: var(--text-muted);">↓</div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-weight: 600;">${prev2}%</span>
-                                <span style="color: var(--text-muted);">(2M ago)</span>
-                            </div>
-                            <div style="text-align: center; font-weight: 700; color: var(--text-muted);">↓</div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-weight: 600;">${prev1}%</span>
-                                <span style="color: var(--text-muted);">(1M ago)</span>
-                            </div>
-                            <div style="text-align: center; font-weight: 700; color: var(--text-muted);">↓</div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-weight: 700; font-size: 14px; color: ${current > prev1 ? 'var(--accent-down)' : 'var(--accent-up)'};">${current}%</span>
-                                <span style="color: var(--text-muted);">(Current)</span>
-                            </div>
-                        </div>
-                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 10px; text-align: center; color: var(--text-muted);">
-                            ${current > prev1 ? '📈 Rising' : '📉 Falling'}
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-purple); margin-bottom: 12px;">${code} CPI</div>
+                        <div style="font-size: 11px; line-height: 2;">
+                            <div>${prev2}% (3M ago) ↓</div>
+                            <div>${prev1}% (1M ago) ↓</div>
+                            <div style="font-weight: 700; color: var(--accent-purple);">${current}% (Current)</div>
                         </div>
                     </div>
                 `;
@@ -698,24 +744,105 @@
         function renderCalendar() {
             if (!allData.calendar) return;
             let html = `<h3 style="margin-bottom: 20px;">📅 Economic Calendar</h3><div class="grid">`;
+            
             for (const event of allData.calendar) {
                 const eventDate = new Date(event.date);
-                const importance = event.importance;
                 html += `
                     <div class="card">
-                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px;">${eventDate.toLocaleDateString()}</div>
-                        <div style="font-size: 13px; font-weight: 700; color: var(--accent-purple); margin-bottom: 8px;">${event.event}</div>
-                        <div class="data-row"><span class="data-label">Country</span><span class="data-value" style="font-size: 12px;">${event.country}</span></div>
+                        <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">${eventDate.toLocaleDateString()}</div>
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-purple); margin-bottom: 8px;">${event.event}</div>
                         <div class="data-row"><span class="data-label">Forecast</span><span class="data-value">${event.forecast}</span></div>
-                        <div class="data-row"><span class="data-label">Previous</span><span class="data-value">${event.previous}</span></div>
-                        <div style="margin-top: 10px;">
-                            <span style="padding: 3px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; background: ${importance === 'High' ? 'rgba(239, 68, 68, 0.2); color: var(--accent-down)' : 'rgba(99, 102, 241, 0.2); color: var(--accent-neutral)'}">${importance}</span>
-                        </div>
+                        <div class="data-row" style="border-bottom: none;"><span class="data-label">Previous</span><span class="data-value">${event.previous}</span></div>
                     </div>
                 `;
             }
             html += '</div>';
             document.getElementById('calendar').innerHTML = html;
+        }
+
+        function renderOverview() {
+            if (!allData.g10Data) return;
+            let html = `<h3 style="margin-bottom: 15px;">🌍 G10 Overview</h3><div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
+                        <div class="data-row"><span>Rate</span><span class="data-value">${data.rate}%</span></div>
+                        <div class="data-row"><span>Inflation</span><span class="data-value">${data.inflation}%</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span>Growth</span><span class="data-value">${data.macroData.gdpGrowth}%</span></div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('overview').innerHTML = html;
+        }
+
+        function renderInflation() {
+            if (!allData.g10Data) return;
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
+                        <div class="data-row"><span>CPI YoY</span><span class="data-value">${data.macroData.cpi_yoy}%</span></div>
+                        <div class="data-row"><span>Core CPI</span><span class="data-value">${data.macroData.coreInflation}%</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span>PPI YoY</span><span class="data-value">${data.macroData.ppi_yoy}%</span></div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('inflation').innerHTML = html;
+        }
+
+        function renderLabour() {
+            if (!allData.g10Data) return;
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
+                        <div class="data-row"><span>Unemployment</span><span class="data-value">${data.macroData.unemployment}%</span></div>
+                        <div class="data-row"><span>Wage Growth</span><span class="data-value">${data.macroData.wageGrowth}%</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span>Participation</span><span class="data-value">${data.macroData.participationRate}%</span></div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('labour').innerHTML = html;
+        }
+
+        function renderPMI() {
+            if (!allData.g10Data) return;
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
+                        <div class="data-row"><span>Manufacturing</span><span class="data-value">${data.macroData.manufacturingPmi}</span></div>
+                        <div class="data-row"><span>Services</span><span class="data-value">${data.macroData.servicesPmi}</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span>Composite</span><span class="data-value">${data.macroData.compositePmi}</span></div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('pmi').innerHTML = html;
+        }
+
+        function renderYields() {
+            if (!allData.g10Data) return;
+            let html = `<div class="grid">`;
+            for (const [code, data] of Object.entries(allData.g10Data)) {
+                html += `
+                    <div class="card">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">${code}</div>
+                        <div class="data-row"><span>2Y</span><span class="data-value">${data.yieldCurve['2Y'].toFixed(2)}%</span></div>
+                        <div class="data-row"><span>10Y</span><span class="data-value">${data.yieldCurve['10Y'].toFixed(2)}%</span></div>
+                        <div class="data-row" style="border-bottom: none;"><span>2s10s</span><span class="data-value">${data.yieldCurve.spread_2s10s}bp</span></div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            document.getElementById('yields').innerHTML = html;
         }
 
         function renderNews() {
@@ -736,17 +863,20 @@
         function renderAllTabs() {
             renderTopBar();
             renderDashboard();
+            renderHeatmap();
+            renderPairMatrix();
+            renderScoreCard();
+            renderRiskReward();
+            renderSurprises();
+            renderPositioning();
+            renderJuice();
+            renderHistory();
+            renderCalendar();
             renderOverview();
             renderInflation();
             renderLabour();
             renderPMI();
             renderYields();
-            renderRealYields();
-            renderCOT();
-            renderCross();
-            renderJuice();
-            renderHistory();
-            renderCalendar();
             renderNews();
         }
 
