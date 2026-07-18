@@ -469,15 +469,16 @@
             <div class="tab" onclick="switchTab('score')">⭐ Score</div>
             <div class="tab" onclick="switchTab('riskreward')">🎯 R:R</div>
             <div class="tab" onclick="switchTab('surprise')">💥 Surprises</div>
-            <div class="tab" onclick="switchTab('positioning')">📍 Positioning</div>
-            <div class="tab" onclick="switchTab('juice')">💜 Juice</div>
-            <div class="tab" onclick="switchTab('history')">📊 CPI</div>
-            <div class="tab" onclick="switchTab('calendar')">📅 Calendar</div>
+            <div class="tab" onclick="switchTab('positioning')">📍 COT</div>
             <div class="tab" onclick="switchTab('overview')">🌍 Overview</div>
             <div class="tab" onclick="switchTab('inflation')">📈 Inflation</div>
             <div class="tab" onclick="switchTab('labour')">👥 Labour</div>
             <div class="tab" onclick="switchTab('pmi')">🏭 PMI</div>
             <div class="tab" onclick="switchTab('yields')">📉 Yields</div>
+            <div class="tab" onclick="switchTab('cross')">🔄 Cross</div>
+            <div class="tab" onclick="switchTab('juice')">💜 Juice</div>
+            <div class="tab" onclick="switchTab('history')">📊 CPI</div>
+            <div class="tab" onclick="switchTab('calendar')">📅 Calendar</div>
             <div class="tab" onclick="switchTab('news')">📰 News</div>
         </div>
 
@@ -488,20 +489,21 @@
         <div id="riskreward" class="content"></div>
         <div id="surprise" class="content"></div>
         <div id="positioning" class="content"></div>
-        <div id="juice" class="content"></div>
-        <div id="history" class="content"></div>
-        <div id="calendar" class="content"></div>
         <div id="overview" class="content"></div>
         <div id="inflation" class="content"></div>
         <div id="labour" class="content"></div>
         <div id="pmi" class="content"></div>
         <div id="yields" class="content"></div>
+        <div id="cross" class="content"></div>
+        <div id="juice" class="content"></div>
+        <div id="history" class="content"></div>
+        <div id="calendar" class="content"></div>
         <div id="news" class="content"></div>
     </div>
 
     <script>
         // ⚠️ CHANGE THIS PASSWORD TO YOUR OWN!
-        const DASHBOARD_PASSWORD = "MohammedJ17@"; // CHANGE THIS TO YOUR PASSWORD!
+        const DASHBOARD_PASSWORD = "MohammedJ"; // CHANGE THIS TO YOUR PASSWORD!
 
         function checkPassword() {
             const password = document.getElementById('passwordInput').value;
@@ -909,6 +911,68 @@
             document.getElementById('yields').innerHTML = html;
         }
 
+        function renderCross() {
+            if (!allData.g10Data) return;
+            let html = `
+                <h3 style="margin-bottom: 20px;">🔄 Currency Comparison</h3>
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <div><label style="color: var(--text-secondary); font-size: 11px; font-weight: 700;">Currency 1:</label>
+                    <select id="cross1" onchange="renderCross()" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                        ${Object.keys(allData.g10Data).map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select></div>
+                    <div><label style="color: var(--text-secondary); font-size: 11px; font-weight: 700;">Currency 2:</label>
+                    <select id="cross2" onchange="renderCross()" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                        ${Object.keys(allData.g10Data).map((c, i) => `<option value="${c}" ${i === 1 ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            `;
+            
+            const c1 = document.getElementById('cross1')?.value || 'USD';
+            const c2 = document.getElementById('cross2')?.value || 'EUR';
+            const data1 = allData.g10Data[c1];
+            const data2 = allData.g10Data[c2];
+            
+            if (data1) {
+                html += `
+                    <div>
+                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 15px;">${c1}</div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Policy Rate</div><div class="card-value">${data1.rate}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Inflation</div><div class="card-value">${data1.inflation}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Growth</div><div class="card-value">${data1.macroData.gdpGrowth}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Unemployment</div><div class="card-value">${data1.macroData.unemployment}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Real 10Y</div><div class="card-value">${data1.realYields.rea_10y}%</div></div>
+                        <div class="card"><div class="card-title">Score</div><div class="card-value">${getMacroScore(data1)}/10</div></div>
+                    </div>
+                `;
+            }
+            
+            if (data2) {
+                html += `
+                    <div>
+                        <div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 15px;">${c2}</div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Policy Rate</div><div class="card-value">${data2.rate}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Inflation</div><div class="card-value">${data2.inflation}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Growth</div><div class="card-value">${data2.macroData.gdpGrowth}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Unemployment</div><div class="card-value">${data2.macroData.unemployment}%</div></div>
+                        <div class="card" style="margin-bottom: 10px;"><div class="card-title">Real 10Y</div><div class="card-value">${data2.realYields.rea_10y}%</div></div>
+                        <div class="card"><div class="card-title">Score</div><div class="card-value">${getMacroScore(data2)}/10</div></div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            document.getElementById('cross').innerHTML = html;
+            
+            // Re-attach event listeners
+            setTimeout(() => {
+                if (document.getElementById('cross1')) {
+                    document.getElementById('cross1').addEventListener('change', renderCross);
+                    document.getElementById('cross2').addEventListener('change', renderCross);
+                }
+            }, 0);
+        }
+
         function renderNews() {
             if (!allData.news) return;
             let html = '';
@@ -932,14 +996,15 @@
             renderRiskReward();
             renderSurprises();
             renderPositioning();
-            renderJuice();
-            renderHistory();
-            renderCalendar();
             renderOverview();
             renderInflation();
             renderLabour();
             renderPMI();
             renderYields();
+            renderCross();
+            renderJuice();
+            renderHistory();
+            renderCalendar();
             renderNews();
         }
     </script>
