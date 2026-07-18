@@ -776,10 +776,18 @@
                 NZD: 'RBNZ cutting. Growth weak. Commodity-dependent.',
                 CHF: 'SNB cutting. Safe-haven demand high. Franc outperformer.'
             };
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            
             for (const [code, data] of Object.entries(allData.g10Data)) {
                 html += `
                     <div class="card" style="margin-bottom: 15px;">
-                        <div style="font-weight: 700; color: var(--accent-purple); margin-bottom: 8px;">${code}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="font-weight: 700; color: var(--accent-purple); font-size: 14px;">${code}</div>
+                            <span style="font-size: 9px; color: var(--text-muted); font-weight: 700;">${timeStr} • ${dateStr}</span>
+                        </div>
                         <div style="font-size: 11px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 10px;">${commentary[code]}</div>
                         <div class="data-row"><span>Rate</span><span class="data-value">${data.rate}%</span></div>
                         <div class="data-row" style="border-bottom: none;"><span>Score</span><span class="data-value">${getMacroScore(data)}/10</span></div>
@@ -1010,25 +1018,26 @@
 
         function renderCross() {
             if (!allData.g10Data) return;
-            let html = `
-                <h3 style="margin-bottom: 20px;">🔄 Currency Comparison</h3>
-                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                    <div><label style="color: var(--text-secondary); font-size: 11px; font-weight: 700;">Currency 1:</label>
-                    <select id="cross1" onchange="renderCross()" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
-                        ${Object.keys(allData.g10Data).map(c => `<option value="${c}">${c}</option>`).join('')}
-                    </select></div>
-                    <div><label style="color: var(--text-secondary); font-size: 11px; font-weight: 700;">Currency 2:</label>
-                    <select id="cross2" onchange="renderCross()" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
-                        ${Object.keys(allData.g10Data).map((c, i) => `<option value="${c}" ${i === 1 ? 'selected' : ''}>${c}</option>`).join('')}
-                    </select></div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            `;
             
             const c1 = document.getElementById('cross1')?.value || 'USD';
             const c2 = document.getElementById('cross2')?.value || 'EUR';
             const data1 = allData.g10Data[c1];
             const data2 = allData.g10Data[c2];
+            
+            let html = `
+                <h3 style="margin-bottom: 20px;">🔄 Currency Comparison</h3>
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <div><label style="color: var(--text-secondary); font-size: 11px; font-weight: 700;">Currency 1:</label>
+                    <select id="cross1" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                        ${Object.keys(allData.g10Data).map(c => `<option value="${c}" ${c === c1 ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select></div>
+                    <div><label style="color: var(--text-secondary); font-size: 11px; font-weight: 700;">Currency 2:</label>
+                    <select id="cross2" style="background: var(--card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                        ${Object.keys(allData.g10Data).map(c => `<option value="${c}" ${c === c2 ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            `;
             
             if (data1) {
                 html += `
@@ -1061,13 +1070,13 @@
             html += '</div>';
             document.getElementById('cross').innerHTML = html;
             
-            // Re-attach event listeners
+            // Attach event listeners AFTER rendering
             setTimeout(() => {
-                if (document.getElementById('cross1')) {
-                    document.getElementById('cross1').addEventListener('change', renderCross);
-                    document.getElementById('cross2').addEventListener('change', renderCross);
-                }
-            }, 0);
+                const sel1 = document.getElementById('cross1');
+                const sel2 = document.getElementById('cross2');
+                if (sel1) sel1.addEventListener('change', renderCross);
+                if (sel2) sel2.addEventListener('change', renderCross);
+            }, 100);
         }
 
         function renderNews() {
