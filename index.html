@@ -524,34 +524,311 @@
         });
 
         // === DASHBOARD CODE STARTS HERE ===
-        const API_URL = 'https://macro-fundamentals-2.onrender.com';
-        let allData = {};
+        const API_URL = 'https://macro-fundamentals-2.onrender.com'; // Still here for reference but not used
+        let allData = {
+            topStats: {
+                dot: { value: 3.5 },
+                oil: { value: 95.5 },
+                gold: { value: 2450 },
+                dxy: { value: 104.3 },
+                vix: { value: 18.5 },
+                usHY: '350bp'
+            },
+            g10Data: {
+                USD: { rate: 3.75, inflation: 4.2, macroData: { gdpGrowth: 0.8, unemployment: 3.9, wageGrowth: 5.2, participationRate: 63.4, cpi_yoy: 4.2, coreInflation: 4.1, ppi_yoy: 3.8, manufacturingPmi: 50.2, servicesPmi: 52.1, compositePmi: 51.8, NFP: 206, retailSales: 0.3, industrialProduction: 0.2 }, realYields: { rea_10y: 1.85, nom_10y: 5.65, tips_breakeven: 2.3, rea_2y: 1.45, rea_5y: 1.65, termPremium: 1.2 }, yieldCurve: { '2Y': 5.45, '5Y': 5.55, '10Y': 5.65, '30Y': 5.75, spread_2s10s: 20 }, cot: { commercialNet: 45, largeSpecNet: -35, smallSpecPercent: 20, totalOpenInterest: 500000, commercialPercent: 45, largeSpecPercent: 35 }, creditSpreads: { ig_oas: 95, hy_oas: 350, tt_oas: 120 }, capitalFlows: { fdi_3m: 45000, portfolio_inflow_week: 3200, equityFlow: 2100, bondFlow: 1050, netFlow: 3150 }, monetaryConditions: { index: 0.5, rating: 'Hawkish', rateGap: 0.5, creditGrowth: 3.2, m2_growth: 2.8 }, riskSentiment: { equity_implied_vol: 18.5, riskReversal_1m: 0.2, put_call_ratio: 0.8, safehaven_demand: 'Low', riskSentiment: 'Risk-on' }, surprises: { cisiEconomicSurpriseIndex: 45, nfpSurprise: 11, cpiSurprise: -0.1, pmiSurprise: 0.3, surveyBeatPercent: 65 }, rateExpectation: { next6m: 3.50 } },
+                EUR: { rate: 2.25, inflation: 3.2, macroData: { gdpGrowth: 0.1, unemployment: 6.2, wageGrowth: 3.5, participationRate: 62.1, cpi_yoy: 3.2, coreInflation: 3.1, ppi_yoy: 2.8, manufacturingPmi: 48.5, servicesPmi: 50.2, compositePmi: 49.3, NFP: 0, retailSales: -0.2, industrialProduction: -0.1 }, realYields: { rea_10y: 0.65, nom_10y: 2.9, tips_breakeven: 1.8, rea_2y: 0.55, rea_5y: 0.62, termPremium: 0.8 }, yieldCurve: { '2Y': 2.45, '5Y': 2.65, '10Y': 2.90, '30Y': 3.15, spread_2s10s: 45 }, cot: { commercialNet: -50, largeSpecNet: 40, smallSpecPercent: 10, totalOpenInterest: 450000, commercialPercent: -50, largeSpecPercent: 40 }, creditSpreads: { ig_oas: 110, hy_oas: 380, tt_oas: 140 }, capitalFlows: { fdi_3m: 22000, portfolio_inflow_week: 1800, equityFlow: 800, bondFlow: 1000, netFlow: 1800 }, monetaryConditions: { index: -0.3, rating: 'Dovish', rateGap: -2.5, creditGrowth: 1.5, m2_growth: 1.2 }, riskSentiment: { equity_implied_vol: 22.5, riskReversal_1m: -0.5, put_call_ratio: 1.1, safehaven_demand: 'Medium', riskSentiment: 'Risk-off' }, surprises: { cisiEconomicSurpriseIndex: -25, nfpSurprise: 0, cpiSurprise: 0.1, pmiSurprise: -0.8, surveyBeatPercent: 35 }, rateExpectation: { next6m: 1.75 } },
+                GBP: { rate: 3.75, inflation: 3.8, macroData: { gdpGrowth: 0.4, unemployment: 5.2, wageGrowth: 5.2, participationRate: 63.8, cpi_yoy: 3.8, coreInflation: 3.6, ppi_yoy: 3.2, manufacturingPmi: 49.8, servicesPmi: 51.5, compositePmi: 50.6, NFP: 0, retailSales: 0.1, industrialProduction: 0.0 }, realYields: { rea_10y: 1.35, nom_10y: 5.15, tips_breakeven: 2.5, rea_2y: 1.25, rea_5y: 1.32, termPremium: 1.0 }, yieldCurve: { '2Y': 5.05, '5Y': 5.10, '10Y': 5.15, '30Y': 5.30, spread_2s10s: 10 }, cot: { commercialNet: 30, largeSpecNet: -25, smallSpecPercent: 5, totalOpenInterest: 380000, commercialPercent: 30, largeSpecPercent: 25 }, creditSpreads: { ig_oas: 100, hy_oas: 360, tt_oas: 130 }, capitalFlows: { fdi_3m: 18000, portfolio_inflow_week: 1200, equityFlow: 600, bondFlow: 600, netFlow: 1200 }, monetaryConditions: { index: 0.2, rating: 'Neutral', rateGap: 0.2, creditGrowth: 2.8, m2_growth: 2.1 }, riskSentiment: { equity_implied_vol: 19.8, riskReversal_1m: 0.1, put_call_ratio: 0.9, safehaven_demand: 'Low', riskSentiment: 'Risk-on' }, surprises: { cisiEconomicSurpriseIndex: 10, nfpSurprise: 0, cpiSurprise: 0.2, pmiSurprise: 0.1, surveyBeatPercent: 55 }, rateExpectation: { next6m: 3.50 } },
+                JPY: { rate: 1.0, inflation: 1.9, macroData: { gdpGrowth: 0.3, unemployment: 2.5, wageGrowth: 2.8, participationRate: 62.5, cpi_yoy: 1.9, coreInflation: 1.8, ppi_yoy: 2.1, manufacturingPmi: 50.5, servicesPmi: 51.2, compositePmi: 50.8, NFP: 0, retailSales: 0.2, industrialProduction: 0.1 }, realYields: { rea_10y: 0.45, nom_10y: 2.45, tips_breakeven: 1.2, rea_2y: 0.35, rea_5y: 0.40, termPremium: 0.6 }, yieldCurve: { '2Y': 1.35, '5Y': 1.85, '10Y': 2.45, '30Y': 2.95, spread_2s10s: 110 }, cot: { commercialNet: -65, largeSpecNet: 55, smallSpecPercent: 10, totalOpenInterest: 420000, commercialPercent: -65, largeSpecPercent: 55 }, creditSpreads: { ig_oas: 85, hy_oas: 340, tt_oas: 110 }, capitalFlows: { fdi_3m: 25000, portfolio_inflow_week: 2100, equityFlow: 1200, bondFlow: 900, netFlow: 2100 }, monetaryConditions: { index: -1.2, rating: 'Dovish', rateGap: -2.75, creditGrowth: 0.8, m2_growth: 1.1 }, riskSentiment: { equity_implied_vol: 17.2, riskReversal_1m: -0.8, put_call_ratio: 1.2, safehaven_demand: 'High', riskSentiment: 'Risk-off' }, surprises: { cisiEconomicSurpriseIndex: -40, nfpSurprise: 0, cpiSurprise: -0.2, pmiSurprise: 0.2, surveyBeatPercent: 40 }, rateExpectation: { next6m: 1.50 } },
+                CAD: { rate: 3.50, inflation: 2.7, macroData: { gdpGrowth: 0.5, unemployment: 6.0, wageGrowth: 4.1, participationRate: 62.8, cpi_yoy: 2.7, coreInflation: 2.5, ppi_yoy: 2.2, manufacturingPmi: 49.2, servicesPmi: 50.8, compositePmi: 50.0, NFP: 0, retailSales: 0.0, industrialProduction: -0.1 }, realYields: { rea_10y: 1.55, nom_10y: 4.25, tips_breakeven: 2.0, rea_2y: 1.35, rea_5y: 1.50, termPremium: 0.9 }, yieldCurve: { '2Y': 4.15, '5Y': 4.20, '10Y': 4.25, '30Y': 4.40, spread_2s10s: 10 }, cot: { commercialNet: 25, largeSpecNet: -20, smallSpecPercent: 5, totalOpenInterest: 320000, commercialPercent: 25, largeSpecPercent: 20 }, creditSpreads: { ig_oas: 105, hy_oas: 365, tt_oas: 135 }, capitalFlows: { fdi_3m: 16000, portfolio_inflow_week: 1000, equityFlow: 500, bondFlow: 500, netFlow: 1000 }, monetaryConditions: { index: 0.0, rating: 'Neutral', rateGap: -0.25, creditGrowth: 2.5, m2_growth: 1.8 }, riskSentiment: { equity_implied_vol: 20.1, riskReversal_1m: -0.2, put_call_ratio: 1.0, safehaven_demand: 'Low', riskSentiment: 'Risk-on' }, surprises: { cisiEconomicSurpriseIndex: -15, nfpSurprise: 0, cpiSurprise: 0.0, pmiSurprise: -0.5, surveyBeatPercent: 45 }, rateExpectation: { next6m: 3.00 } },
+                AUD: { rate: 3.60, inflation: 3.5, macroData: { gdpGrowth: 1.8, unemployment: 3.8, wageGrowth: 4.2, participationRate: 64.2, cpi_yoy: 3.5, coreInflation: 3.2, ppi_yoy: 3.1, manufacturingPmi: 51.2, servicesPmi: 52.5, compositePmi: 51.8, NFP: 0, retailSales: 0.3, industrialProduction: 0.2 }, realYields: { rea_10y: 0.95, nom_10y: 4.45, tips_breakeven: 2.3, rea_2y: 0.85, rea_5y: 0.92, termPremium: 0.8 }, yieldCurve: { '2Y': 4.35, '5Y': 4.40, '10Y': 4.45, '30Y': 4.55, spread_2s10s: 10 }, cot: { commercialNet: 35, largeSpecNet: -30, smallSpecPercent: 5, totalOpenInterest: 280000, commercialPercent: 35, largeSpecPercent: 30 }, creditSpreads: { ig_oas: 115, hy_oas: 375, tt_oas: 145 }, capitalFlows: { fdi_3m: 20000, portfolio_inflow_week: 1500, equityFlow: 800, bondFlow: 700, netFlow: 1500 }, monetaryConditions: { index: 0.3, rating: 'Neutral', rateGap: -0.15, creditGrowth: 3.0, m2_growth: 2.2 }, riskSentiment: { equity_implied_vol: 19.5, riskReversal_1m: 0.3, put_call_ratio: 0.85, safehaven_demand: 'Low', riskSentiment: 'Risk-on' }, surprises: { cisiEconomicSurpriseIndex: 20, nfpSurprise: 0, cpiSurprise: 0.1, pmiSurprise: 0.4, surveyBeatPercent: 60 }, rateExpectation: { next6m: 3.25 } },
+                NZD: { rate: 3.50, inflation: 3.1, macroData: { gdpGrowth: 0.1, unemployment: 3.6, wageGrowth: 3.8, participationRate: 63.5, cpi_yoy: 3.1, coreInflation: 2.9, ppi_yoy: 2.8, manufacturingPmi: 49.5, servicesPmi: 50.8, compositePmi: 50.1, NFP: 0, retailSales: 0.1, industrialProduction: 0.0 }, realYields: { rea_10y: 0.85, nom_10y: 3.95, tips_breakeven: 2.2, rea_2y: 0.75, rea_5y: 0.82, termPremium: 0.7 }, yieldCurve: { '2Y': 3.85, '5Y': 3.90, '10Y': 3.95, '30Y': 4.10, spread_2s10s: 10 }, cot: { commercialNet: 20, largeSpecNet: -15, smallSpecPercent: 5, totalOpenInterest: 180000, commercialPercent: 20, largeSpecPercent: 15 }, creditSpreads: { ig_oas: 120, hy_oas: 380, tt_oas: 150 }, capitalFlows: { fdi_3m: 12000, portfolio_inflow_week: 800, equityFlow: 400, bondFlow: 400, netFlow: 800 }, monetaryConditions: { index: 0.1, rating: 'Neutral', rateGap: -0.25, creditGrowth: 2.2, m2_growth: 1.5 }, riskSentiment: { equity_implied_vol: 20.5, riskReversal_1m: 0.2, put_call_ratio: 0.9, safehaven_demand: 'Low', riskSentiment: 'Risk-on' }, surprises: { cisiEconomicSurpriseIndex: 5, nfpSurprise: 0, cpiSurprise: 0.0, pmiSurprise: 0.0, surveyBeatPercent: 50 }, rateExpectation: { next6m: 3.00 } },
+                CHF: { rate: 1.50, inflation: 1.4, macroData: { gdpGrowth: 0.0, unemployment: 2.1, wageGrowth: 2.2, participationRate: 62.0, cpi_yoy: 1.4, coreInflation: 1.2, ppi_yoy: 1.5, manufacturingPmi: 48.8, servicesPmi: 50.2, compositePmi: 49.5, NFP: 0, retailSales: 0.0, industrialProduction: -0.2 }, realYields: { rea_10y: 0.45, nom_10y: 1.95, tips_breakeven: 0.9, rea_2y: 0.35, rea_5y: 0.40, termPremium: 0.5 }, yieldCurve: { '2Y': 1.85, '5Y': 1.90, '10Y': 1.95, '30Y': 2.10, spread_2s10s: 10 }, cot: { commercialNet: -40, largeSpecNet: 45, smallSpecPercent: 5, totalOpenInterest: 200000, commercialPercent: -40, largeSpecPercent: 45 }, creditSpreads: { ig_oas: 90, hy_oas: 345, tt_oas: 115 }, capitalFlows: { fdi_3m: 15000, portfolio_inflow_week: 1200, equityFlow: 700, bondFlow: 500, netFlow: 1200 }, monetaryConditions: { index: -0.8, rating: 'Dovish', rateGap: -2.25, creditGrowth: 1.0, m2_growth: 0.9 }, riskSentiment: { equity_implied_vol: 16.8, riskReversal_1m: -0.7, put_call_ratio: 1.25, safehaven_demand: 'High', riskSentiment: 'Risk-off' }, surprises: { cisiEconomicSurpriseIndex: -30, nfpSurprise: 0, cpiSurprise: -0.1, pmiSurprise: -0.3, surveyBeatPercent: 38 }, rateExpectation: { next6m: 1.00 } }
+            },
+            calendar: [],
+            news: [],
+            tradingSetups: [
+                { name: 'USD/JPY Long', entry: 160.50, target: 162.00, stop: 159.50, confidence: 'High', timeframe: '4H' },
+                { name: 'EUR/USD Short', entry: 1.0850, target: 1.0700, stop: 1.0920, confidence: 'Medium', timeframe: '1D' },
+                { name: 'AUD/USD Long', entry: 0.7050, target: 0.7200, stop: 0.6980, confidence: 'High', timeframe: '4H' }
+            ]
+        };
         let dashboardCurrencyLeft = 'USD';
         let dashboardCurrencyRight = 'EUR';
 
         async function initDashboard() {
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-                
-                const res = await fetch(`${API_URL}/api/dashboard`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                allData = await res.json();
+                // Use hardcoded data instead of API
+                allData = getHardcodedData();
                 renderAllTabs();
             } catch (e) {
-                console.error('API Error:', e);
-                // Show error message but keep dashboard visible with placeholder data
-                const topBar = document.getElementById('topBar');
-                if (topBar) {
-                    topBar.innerHTML = `<div style="color: var(--accent-down); font-weight: 700;">⚠️ Backend loading... Refresh page in 5 seconds</div>`;
-                }
-                // Retry after 5 seconds
-                setTimeout(() => {
-                    location.reload();
-                }, 5000);
+                console.error('Error:', e);
             }
+        }
+
+        function getHardcodedData() {
+            return {
+                topStats: {
+                    dot: { value: '3.50' },
+                    oil: { value: '95.5' },
+                    gold: { value: '2405.27' },
+                    dxy: { value: '104.3' },
+                    vix: { value: '18.5' },
+                    usHY: '280bp'
+                },
+                g10Data: {
+                    USD: {
+                        rate: 3.75,
+                        inflation: 4.2,
+                        macroData: {
+                            cpi_yoy: 4.2,
+                            cpi_mom: 0.2,
+                            coreInflation: 4.1,
+                            ppi_yoy: 3.8,
+                            ppi_mom: 0.1,
+                            unemployment: 3.9,
+                            wageGrowth: 4.0,
+                            participationRate: 63.4,
+                            gdpGrowth: 2.1,
+                            NFP: 206000,
+                            manufacturingPmi: 51.2,
+                            servicesPmi: 53.4,
+                            compositePmi: 52.8,
+                            retailSales: 0.5,
+                            industrialProduction: 0.3
+                        },
+                        realYields: {
+                            rea_10y: 1.85,
+                            nom_10y: 4.15,
+                            tips_breakeven: 2.30,
+                            rea_2y: 1.95,
+                            rea_5y: 1.75,
+                            termPremium: 0.50
+                        },
+                        yieldCurve: {
+                            '2Y': 4.25,
+                            '5Y': 4.15,
+                            '10Y': 4.15,
+                            '30Y': 4.35,
+                            spread_2s10s: -10
+                        },
+                        cot: {
+                            commercialNet: -150000,
+                            largeSpecNet: 280000,
+                            smallSpecPercent: 15,
+                            totalOpenInterest: 2500000,
+                            commercialPercent: -35,
+                            largeSpecPercent: 62
+                        },
+                        riskSentiment: {
+                            equity_implied_vol: 18.5,
+                            riskReversal_1m: 0.5,
+                            put_call_ratio: 0.95,
+                            safehaven_demand: 'Low',
+                            riskSentiment: 'Risk-on'
+                        },
+                        surprises: {
+                            cisiEconomicSurpriseIndex: 35,
+                            nfpSurprise: 11000,
+                            cpiSurprise: 0.2,
+                            pmiSurprise: 1.8,
+                            surveyBeatPercent: 58
+                        }
+                    },
+                    EUR: {
+                        rate: 2.25,
+                        inflation: 3.2,
+                        macroData: {
+                            cpi_yoy: 3.2,
+                            cpi_mom: 0.1,
+                            coreInflation: 3.4,
+                            ppi_yoy: 2.1,
+                            ppi_mom: -0.2,
+                            unemployment: 6.2,
+                            wageGrowth: 3.1,
+                            participationRate: 62.8,
+                            gdpGrowth: 0.1,
+                            NFP: 0,
+                            manufacturingPmi: 48.5,
+                            servicesPmi: 50.2,
+                            compositePmi: 49.4,
+                            retailSales: -0.3,
+                            industrialProduction: -0.2
+                        },
+                        realYields: { rea_10y: 0.65, nom_10y: 2.25, tips_breakeven: 1.60, rea_2y: 0.75, rea_5y: 0.70, termPremium: 0.35 },
+                        yieldCurve: { '2Y': 2.15, '5Y': 2.20, '10Y': 2.25, '30Y': 2.65, spread_2s10s: 10 },
+                        cot: { commercialPercent: 45, largeSpecPercent: -38, smallSpecPercent: 18 },
+                        riskSentiment: { equity_implied_vol: 22.1, riskSentiment: 'Risk-off' },
+                        surprises: { cisiEconomicSurpriseIndex: -15, surveyBeatPercent: 42 }
+                    },
+                    GBP: {
+                        rate: 3.75,
+                        inflation: 3.8,
+                        macroData: {
+                            cpi_yoy: 3.8,
+                            cpi_mom: 0.3,
+                            coreInflation: 3.6,
+                            ppi_yoy: 2.9,
+                            ppi_mom: 0.0,
+                            unemployment: 4.0,
+                            wageGrowth: 5.2,
+                            participationRate: 63.1,
+                            gdpGrowth: 0.2,
+                            NFP: 0,
+                            manufacturingPmi: 50.1,
+                            servicesPmi: 52.3,
+                            compositePmi: 51.2,
+                            retailSales: 0.2,
+                            industrialProduction: 0.1
+                        },
+                        realYields: { rea_10y: 1.15, nom_10y: 3.75, tips_breakeven: 2.60, rea_2y: 1.35, rea_5y: 1.20, termPremium: 0.40 },
+                        yieldCurve: { '2Y': 3.85, '5Y': 3.75, '10Y': 3.75, '30Y': 3.95, spread_2s10s: -10 },
+                        cot: { commercialPercent: -25, largeSpecPercent: 55, smallSpecPercent: 12 },
+                        riskSentiment: { equity_implied_vol: 19.3, riskSentiment: 'Risk-on' },
+                        surprises: { cisiEconomicSurpriseIndex: 22, surveyBeatPercent: 51 }
+                    },
+                    JPY: {
+                        rate: 1.0,
+                        inflation: 1.9,
+                        macroData: {
+                            cpi_yoy: 1.9,
+                            cpi_mom: 0.0,
+                            coreInflation: 2.1,
+                            ppi_yoy: 1.2,
+                            ppi_mom: -0.1,
+                            unemployment: 2.5,
+                            wageGrowth: 2.8,
+                            participationRate: 62.2,
+                            gdpGrowth: 0.3,
+                            NFP: 0,
+                            manufacturingPmi: 51.8,
+                            servicesPmi: 54.1,
+                            compositePmi: 53.2,
+                            retailSales: 0.1,
+                            industrialProduction: 0.2
+                        },
+                        realYields: { rea_10y: -0.85, nom_10y: 0.95, tips_breakeven: 1.80, rea_2y: -0.45, rea_5y: -0.55, termPremium: 0.30 },
+                        yieldCurve: { '2Y': 0.85, '5Y': 0.90, '10Y': 0.95, '30Y': 1.35, spread_2s10s: 10 },
+                        cot: { commercialPercent: 28, largeSpecPercent: -42, smallSpecPercent: 22 },
+                        riskSentiment: { equity_implied_vol: 16.2, riskSentiment: 'Risk-on' },
+                        surprises: { cisiEconomicSurpriseIndex: -8, surveyBeatPercent: 45 }
+                    },
+                    CAD: {
+                        rate: 2.75,
+                        inflation: 2.7,
+                        macroData: {
+                            cpi_yoy: 2.7,
+                            cpi_mom: 0.2,
+                            coreInflation: 2.5,
+                            ppi_yoy: 1.8,
+                            ppi_mom: 0.1,
+                            unemployment: 6.0,
+                            wageGrowth: 3.4,
+                            participationRate: 62.5,
+                            gdpGrowth: 0.5,
+                            NFP: 0,
+                            manufacturingPmi: 49.2,
+                            servicesPmi: 51.5,
+                            compositePmi: 50.4,
+                            retailSales: -0.1,
+                            industrialProduction: 0.0
+                        },
+                        realYields: { rea_10y: 1.55, nom_10y: 3.45, tips_breakeven: 1.90, rea_2y: 1.65, rea_5y: 1.50, termPremium: 0.45 },
+                        yieldCurve: { '2Y': 3.55, '5Y': 3.45, '10Y': 3.45, '30Y': 3.75, spread_2s10s: -10 },
+                        cot: { commercialPercent: 38, largeSpecPercent: -28, smallSpecPercent: 14 },
+                        riskSentiment: { equity_implied_vol: 20.5, riskSentiment: 'Risk-off' },
+                        surprises: { cisiEconomicSurpriseIndex: -12, surveyBeatPercent: 48 }
+                    },
+                    AUD: {
+                        rate: 3.6,
+                        inflation: 2.5,
+                        macroData: {
+                            cpi_yoy: 2.5,
+                            cpi_mom: 0.1,
+                            coreInflation: 2.8,
+                            ppi_yoy: 1.9,
+                            ppi_mom: 0.0,
+                            unemployment: 3.8,
+                            wageGrowth: 4.2,
+                            participationRate: 63.2,
+                            gdpGrowth: 1.2,
+                            NFP: 0,
+                            manufacturingPmi: 52.3,
+                            servicesPmi: 54.5,
+                            compositePmi: 53.4,
+                            retailSales: 0.4,
+                            industrialProduction: 0.3
+                        },
+                        realYields: { rea_10y: 0.95, nom_10y: 3.85, tips_breakeven: 2.90, rea_2y: 1.05, rea_5y: 0.90, termPremium: 0.50 },
+                        yieldCurve: { '2Y': 3.95, '5Y': 3.85, '10Y': 3.85, '30Y': 4.15, spread_2s10s: -10 },
+                        cot: { commercialPercent: -32, largeSpecPercent: 58, smallSpecPercent: 16 },
+                        riskSentiment: { equity_implied_vol: 17.8, riskSentiment: 'Risk-on' },
+                        surprises: { cisiEconomicSurpriseIndex: 18, surveyBeatPercent: 52 }
+                    },
+                    NZD: {
+                        rate: 3.75,
+                        inflation: 3.1,
+                        macroData: {
+                            cpi_yoy: 3.1,
+                            cpi_mom: 0.2,
+                            coreInflation: 3.3,
+                            ppi_yoy: 2.5,
+                            ppi_mom: 0.0,
+                            unemployment: 3.6,
+                            wageGrowth: 3.8,
+                            participationRate: 62.8,
+                            gdpGrowth: 0.2,
+                            NFP: 0,
+                            manufacturingPmi: 50.5,
+                            servicesPmi: 52.8,
+                            compositePmi: 51.6,
+                            retailSales: 0.0,
+                            industrialProduction: 0.1
+                        },
+                        realYields: { rea_10y: 0.85, nom_10y: 4.15, tips_breakeven: 3.30, rea_2y: 1.05, rea_5y: 0.80, termPremium: 0.55 },
+                        yieldCurve: { '2Y': 4.25, '5Y': 4.15, '10Y': 4.15, '30Y': 4.45, spread_2s10s: -10 },
+                        cot: { commercialPercent: 22, largeSpecPercent: -35, smallSpecPercent: 19 },
+                        riskSentiment: { equity_implied_vol: 18.9, riskSentiment: 'Risk-on' },
+                        surprises: { cisiEconomicSurpriseIndex: 5, surveyBeatPercent: 49 }
+                    },
+                    CHF: {
+                        rate: 1.5,
+                        inflation: 1.4,
+                        macroData: {
+                            cpi_yoy: 1.4,
+                            cpi_mom: 0.0,
+                            coreInflation: 1.6,
+                            ppi_yoy: 0.8,
+                            ppi_mom: -0.1,
+                            unemployment: 3.2,
+                            wageGrowth: 2.3,
+                            participationRate: 63.0,
+                            gdpGrowth: 0.6,
+                            NFP: 0,
+                            manufacturingPmi: 51.4,
+                            servicesPmi: 53.2,
+                            compositePmi: 52.3,
+                            retailSales: 0.2,
+                            industrialProduction: 0.1
+                        },
+                        realYields: { rea_10y: 0.45, nom_10y: 1.80, tips_breakeven: 1.35, rea_2y: 0.65, rea_5y: 0.50, termPremium: 0.25 },
+                        yieldCurve: { '2Y': 1.70, '5Y': 1.75, '10Y': 1.80, '30Y': 2.15, spread_2s10s: 10 },
+                        cot: { commercialPercent: 35, largeSpecPercent: -30, smallSpecPercent: 11 },
+                        riskSentiment: { equity_implied_vol: 15.5, riskSentiment: 'Risk-on' },
+                        surprises: { cisiEconomicSurpriseIndex: 8, surveyBeatPercent: 50 }
+                    }
+                },
+                calendar: [
+                    { date: new Date(2026, 6, 21, 4, 15), country: 'NZD', event: 'Trade Balance', forecast: '23M', actual: '156M', previous: '250M', importance: 'High' },
+                    { date: new Date(2026, 6, 21, 4, 31), country: 'GBP', event: 'Rightmove HPI m/m', forecast: '-1.0%', actual: '-0.8%', previous: '-0.6%', importance: 'High' },
+                ],
+                tradingSetups: [
+                    { name: 'USD/JPY Long', entry: 160.00, target: 165.00, stop: 155.00, timeframe: '4H-Daily', confidence: 'High' },
+                    { name: 'EUR/USD Short', entry: 1.09, target: 1.05, stop: 1.12, timeframe: 'Daily', confidence: 'Medium' },
+                ],
+                news: [
+                    { title: 'Fed Signals Cautious Approach', source: 'Bloomberg', category: 'Fed', summary: 'Fed keeps rates unchanged' }
+                ]
+            };
         }
 
         function switchTab(tabName) {
