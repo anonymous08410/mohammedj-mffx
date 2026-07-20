@@ -430,8 +430,8 @@
     </style>
 </head>
 <body>
-    <!-- LOGIN SCREEN -->
-    <div class="login-screen" id="loginScreen">
+    <!-- LOGIN SCREEN - HIDDEN -->
+    <div class="login-screen hidden" id="loginScreen" style="display: none;">
         <div class="login-box">
             <div class="login-title">🔐 G10 Dashboard</div>
             <div class="login-subtitle">Private Access Only</div>
@@ -443,18 +443,15 @@
                     id="passwordInput" 
                     class="input-field" 
                     placeholder="Enter password"
-                    onkeypress="if(event.key==='Enter') checkPassword()"
-                    autofocus
                 >
             </div>
-
-            <button class="login-btn" onclick="checkPassword()">🔓 Access Dashboard</button>
+            <button class="login-btn" onclick="document.getElementById('loginScreen').style.display='none'; document.getElementById('dashboardContainer').style.display='flex'; initDashboard();">🔓 Access Dashboard</button>
             <div class="error-message" id="errorMessage">❌ Incorrect password. Try again.</div>
         </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div class="container" id="dashboardContainer" style="display: none;">
+    <!-- DASHBOARD - VISIBLE -->
+    <div class="container" id="dashboardContainer" style="display: flex !important;">
         <div class="top-bar">
             <div class="top-bar-left" id="topBar">Loading...</div>
             <div class="top-bar-right">
@@ -514,21 +511,16 @@
         }
 
         function logout() {
-            sessionStorage.removeItem('authenticated');
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('dashboardContainer').style.display = 'none';
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('passwordInput').focus();
+            alert('Logout disabled for testing. Refresh page to restart.');
+            location.reload();
         }
 
         // Check if already logged in
         window.addEventListener('load', function() {
-            if (sessionStorage.getItem('authenticated') === 'true') {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('dashboardContainer').style.display = 'flex';
-                initDashboard();
-            }
+            // Auto-load dashboard on startup
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardContainer').style.display = 'flex';
+            initDashboard();
         });
 
         // === DASHBOARD CODE STARTS HERE ===
