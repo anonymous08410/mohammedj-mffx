@@ -1476,48 +1476,10 @@
             
             document.getElementById('news').innerHTML = html;
         }
-            `;
-            
-            const now = new Date();
-            const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
-            const timeStr = istTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-            const dateStr = istTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            
-            for (const item of newsItems) {
-                html += `
-                    <div class="news-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                            <a href="${item.link}" target="_blank" class="news-title" title="Open source">${item.title}</a>
-                            <span style="font-size: 9px; color: var(--text-muted); white-space: nowrap; margin-left: 10px; font-weight: 700;">${timeStr}</span>
-                        </div>
-                        <div class="news-meta">
-                            <a href="${item.link}" target="_blank" class="news-source-link">📍 ${item.source}</a>
-                            <span>📂 ${item.category}</span>
-                            <span>📅 ${dateStr} IST</span>
-                        </div>
-                        <div class="news-summary">${item.summary}</div>
-                    </div>
-                `;
-            }
-            
-            html += `
-                <div style="margin-top: 15px; padding: 12px; background: rgba(99, 102, 241, 0.1); border-radius: 4px; border-left: 3px solid var(--accent-purple);">
-                    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">📡 Live News Sources</div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <a href="https://www.bloomberg.com/markets/currencies" target="_blank" style="font-size: 11px; color: var(--accent-purple); text-decoration: none; font-weight: 600;">Bloomberg FX</a>
-                        <a href="https://www.reuters.com/finance" target="_blank" style="font-size: 11px; color: var(--accent-purple); text-decoration: none; font-weight: 600;">Reuters Finance</a>
-                        <a href="https://www.cnbc.com/markets/" target="_blank" style="font-size: 11px; color: var(--accent-purple); text-decoration: none; font-weight: 600;">CNBC Markets</a>
-                        <a href="https://www.fxstreet.com" target="_blank" style="font-size: 11px; color: var(--accent-purple); text-decoration: none; font-weight: 600;">FXStreet</a>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('news').innerHTML = html;
-        }
 
         function renderAllTabs() {
             try {
-                console.log('renderAllTabs: Starting...');
+                console.log('Starting renderAllTabs...');
                 renderTopBar();
                 console.log('✓ renderTopBar done');
                 renderDashboard();
