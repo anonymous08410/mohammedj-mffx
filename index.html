@@ -517,21 +517,17 @@
         }
 
         // Check if already logged in
-        window.addEventListener('load', function() {
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing dashboard...');
             // Auto-load dashboard on startup
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboardContainer').style.display = 'flex';
-            initDashboard();
-            
-            // Add login button listener
-            const loginBtn = document.getElementById('loginBtn');
-            if (loginBtn) {
-                loginBtn.addEventListener('click', function() {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('dashboardContainer').style.display = 'flex';
-                    initDashboard();
-                });
-            }
+            setTimeout(function() {
+                const loginScreen = document.getElementById('loginScreen');
+                const dashboardContainer = document.getElementById('dashboardContainer');
+                if (loginScreen) loginScreen.style.display = 'none';
+                if (dashboardContainer) dashboardContainer.style.display = 'flex';
+                initDashboard();
+                console.log('Dashboard initialization complete');
+            }, 100);
         });
 
         // === DASHBOARD CODE STARTS HERE ===
@@ -571,11 +567,19 @@
                 console.log('Initializing dashboard...');
                 // Use hardcoded data instead of API
                 allData = getHardcodedData();
-                console.log('Loaded data:', allData);
-                renderAllTabs();
-                console.log('Dashboard rendered successfully!');
+                console.log('Data loaded, allData keys:', Object.keys(allData));
+                console.log('topStats:', allData.topStats);
+                
+                // Force render
+                if (allData && allData.topStats) {
+                    renderAllTabs();
+                    console.log('Dashboard rendered successfully!');
+                } else {
+                    console.error('Missing data:', { allData, topStats: allData ? allData.topStats : 'no allData' });
+                }
             } catch (e) {
                 console.error('Dashboard initialization error:', e);
+                console.error('Stack:', e.stack);
                 alert('Error loading dashboard: ' + e.message);
             }
         }
@@ -854,11 +858,18 @@
         }
 
         function renderTopBar() {
-            if (!allData || !allData.topStats) {
-                console.warn('Missing topStats data', allData);
-                document.getElementById('topBar').innerHTML = '<div style="color: red;">Data loading...</div>';
+            const topBar = document.getElementById('topBar');
+            if (!topBar) {
+                console.error('topBar element not found!');
                 return;
             }
+            
+            if (!allData || !allData.topStats) {
+                console.warn('Missing topStats data', allData);
+                topBar.innerHTML = '<div style="color: #ff6b6b; font-weight: 700;">⚠️ Data loading...</div>';
+                return;
+            }
+            
             const stats = allData.topStats;
             let html = `
                 <div class="stat"><span>DOT</span><span class="stat-value">${stats.dot.value}%</span></div>
@@ -868,7 +879,8 @@
                 <div class="stat"><span>VIX</span><span class="stat-value">${stats.vix.value}</span></div>
                 <div class="stat"><span>HY OAS</span><span class="stat-value">${stats.usHY}bp</span></div>
             `;
-            document.getElementById('topBar').innerHTML = html;
+            topBar.innerHTML = html;
+            console.log('renderTopBar complete');
         }
 
         function getMacroScore(data) {
@@ -1430,207 +1442,37 @@
             }, 100);
         }
 
-        function openNewsArticle(index) {
-            const articles = window.newsArticles || [];
-            const article = articles[index];
-            if (!article) return;
-            
-            let modal = document.getElementById('newsModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'newsModal';
-                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;';
-                document.body.appendChild(modal);
-            }
-            
-            modal.innerHTML = `
-                <div style="background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-width: 800px; max-height: 80vh; overflow-y: auto; padding: 30px; width: 100%;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
-                        <h2 style="color: var(--accent-purple); margin: 0; flex: 1;">${article.title}</h2>
-                        <button onclick="document.getElementById('newsModal').style.display='none'" style="background: rgba(239, 68, 68, 0.2); border: none; color: var(--accent-down); cursor: pointer; font-size: 24px; width: 40px; height: 40px; border-radius: 4px; font-weight: bold;">×</button>
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
-                        <span>📍 <strong>${article.source}</strong></span>
-                        <span>📂 ${article.category}</span>
-                        <span>📅 ${article.date}</span>
-                        <span>⏰ ${article.time}</span>
-                    </div>
-                    <div style="border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 20px 0; margin-bottom: 20px;">
-                        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin: 0;">${article.fullContent}</p>
-                    </div>
-                    <div style="font-size: 11px; color: var(--text-muted);">
-                        <strong>Analysis:</strong> ${article.analysis}
-                    </div>
-                </div>
-            `;
-            modal.style.display = 'flex';
-        }
+
 
         function renderNews() {
-            // Real market news with FULL ARTICLE CONTENT
-            const newsArticles = [
-                { 
-                    title: 'Fed Chair Powell: Inflation Remains Sticky', 
-                    source: 'Bloomberg', 
-                    category: 'Fed', 
-                    summary: 'Federal Reserve Chair emphasizes cautious approach to rate cuts amid persistent inflation concerns.',
-                    fullContent: 'Federal Reserve Chair Jerome Powell addressed market participants today, emphasizing that while inflation has made progress, it remains sticky above the Fed\'s 2% target. Powell stated that the central bank will continue its data-dependent approach to monetary policy. Recent CPI readings show core inflation at 4.2%, down from 4.5% in previous months but still elevated. The Fed Chair reiterated that rate cuts will only come if inflation continues its downward trajectory convincingly. Market expectations now price in a 35% probability of a cut by year-end 2026.',
-                    analysis: 'Powell\'s hawkish tone supports USD strength. Expect continued volatility in rate-sensitive pairs like EUR/USD and GBP/USD as markets reassess rate cut probabilities.'
-                },
-                { 
-                    title: 'BOE Expected to Hold Rates at 5.25%', 
-                    source: 'Reuters', 
-                    category: 'BOE', 
-                    summary: 'Bank of England rate decision today at 12:00 GMT. Markets price in hold amid economic uncertainty.',
-                    fullContent: 'The Bank of England Monetary Policy Committee is expected to maintain the base rate at 5.25% in today\'s decision at 12:00 GMT. Markets currently price in a 95% probability of a hold, with rate cuts potentially beginning in Q4 2026. Recent UK inflation data showed CPI at 3.8% YoY, while labour market data revealed wage growth at 5.2%. The BOE faces a delicate balance between supporting growth amid slowing economic activity and keeping inflation anchored.',
-                    analysis: 'GBP/USD could see volatility around the 1.27 level. A more dovish-than-expected tone could pressure sterling, while hawkish guidance would support cable.'
-                },
-                { 
-                    title: 'USD Strength Pressures EM Currencies', 
-                    source: 'FXStreet', 
-                    category: 'FX', 
-                    summary: 'US Dollar index breaks above 105 on strong macroeconomic data and safe-haven demand.',
-                    fullContent: 'The US Dollar Index (DXY) has broken above the 105 level for the first time in three weeks, driven by a combination of strong US economic data and global safe-haven demand. The USD strength is particularly pronounced against emerging market currencies, with USD/INR near all-time highs at 83.50. Recent US economic data showed NFP at 206K (beating expectations of 195K) and jobless claims falling to 210K. Fed funds futures are now pricing in a lower probability of rate cuts this year.',
-                    analysis: 'Strong USD favors pairs like USD/JPY, USD/CAD, and emerging market crosses. GBP/USD and EUR/USD may face downside pressure as the dollar outperforms.'
-                },
-                { 
-                    title: 'ECB Pauses Rate Hikes, Signals Possible Cuts', 
-                    source: 'CNBC', 
-                    category: 'ECB', 
-                    summary: 'European Central Bank holds rates but signals pivot toward potential rate reductions in Q2 2026.',
-                    fullContent: 'The European Central Bank held its benchmark rate at 2.25% as expected, but surprised markets with dovish forward guidance. ECB President Christine Lagarde signaled that the bank is ready to begin rate cuts by mid-2026 if inflation continues its downward trend. Eurozone inflation stands at 3.2%, down from 3.4% previously. Economic growth remains sluggish at just 0.1% in Q2 2026. The ECB\'s pivot marks a significant shift from its hawkish stance earlier this year.',
-                    analysis: 'ECB dovishness should pressure EUR/USD lower. Look for support at 1.08 and potential breakdown to 1.05 if economic data continues to weaken.'
-                },
-                { 
-                    title: 'NFP Report Beats Expectations at 206K', 
-                    source: 'DailyFX', 
-                    category: 'NFP', 
-                    summary: 'US Non-Farm Payrolls exceed forecast, supporting USD and equities. Wage growth at 5.2% YoY.',
-                    fullContent: 'The US economy added 206,000 jobs in July 2026, beating the forecast of 195,000 and remaining above the 150,000 level considered necessary to keep unemployment stable. Wage growth accelerated to 5.2% YoY, up from 5.0% in the previous month. The unemployment rate held steady at 3.9%, while the participation rate improved to 63.4%. This strong labour market data reinforces the Fed\'s cautious stance on rate cuts and supports the USD.',
-                    analysis: 'Strong labour market data should extend USD upside. Watch for potential breakouts in USD/JPY above 160.50 and weakness in commodity-linked pairs like AUD/USD.'
-                },
-                { 
-                    title: 'Oil Prices Climb on OPEC+ Production Cuts', 
-                    source: 'MarketWatch', 
-                    category: 'Commodities', 
-                    summary: 'Brent crude rises above $95/barrel as OPEC extends production cuts through Q3 2026.',
-                    fullContent: 'Brent crude oil prices climbed above $95/barrel following OPEC+\'s announcement to extend production cuts through September 2026. The cartel cited global economic uncertainty and the need to support prices. WTI crude also rallied, trading near $90/barrel. Higher oil prices could support commodity-linked currencies like CAD and AUD, while potentially weighing on energy importers.',
-                    analysis: 'Higher oil supports CAD and AUD. USD/CAD could weaken toward 1.35, while AUD/USD may find support above 0.70.'
-                },
-                { 
-                    title: 'Gold Rallies on Global Growth Concerns', 
-                    source: 'Investing.com', 
-                    category: 'Gold', 
-                    summary: 'Yellow metal hits 2-month high as investors seek safe-haven assets amid tech sector volatility.',
-                    fullContent: 'Gold prices surged to their highest level in two months, trading above $2,400/oz, as investors flee risk assets amid concerns about global growth slowdown. The rally was fueled by mixed economic data and geopolitical tensions. Gold benefited from weakness in equities and safe-haven demand. Technically, gold could target $2,450 if it holds above the 200-day moving average.',
-                    analysis: 'Gold rally suggests risk-off sentiment. This should support JPY and CHF (safe-haven currencies) while pressuring AUD and other risk assets.'
-                },
-                { 
-                    title: 'AUD/USD Breaks Above 0.71', 
-                    source: 'FXPro', 
-                    category: 'AUD', 
-                    summary: 'Australian Dollar strengthens on China stimulus expectations and commodity price support.',
-                    fullContent: 'The Australian Dollar broke above the psychologically important 0.71 level against the US Dollar, driven by expectations of additional stimulus from China and solid commodity prices. China\'s recent infrastructure spending announcements have supported demand for raw materials, benefiting Australia. The AUD also benefited from slightly less hawkish Fed expectations.',
-                    analysis: 'AUD/USD could target 0.72-0.73 if China stimulus continues. Monitor Chinese economic data closely as it drives commodity prices and AUD performance.'
-                },
+            let html = '<h3 style="margin-bottom: 20px;">📰 Market Headlines</h3>';
+            html += '<style>';
+            html += '.news-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 14px; margin-bottom: 12px; }';
+            html += '.news-card:hover { border-color: var(--accent-purple); }';
+            html += '.news-title { font-weight: 600; font-size: 13px; color: var(--text-primary); }';
+            html += '</style>';
+            
+            const newsItems = [
+                { title: 'Fed Powell: Inflation Remains Sticky', source: 'Bloomberg', summary: 'Federal Reserve Chair emphasizes cautious approach.' },
+                { title: 'BOE Expected to Hold at 5.25%', source: 'Reuters', summary: 'Bank of England holds rates steady.' },
+                { title: 'USD Strength Pressures EM', source: 'FXStreet', summary: 'Dollar breaks above 105 on strong data.' },
+                { title: 'ECB Signals Rate Cuts Coming', source: 'CNBC', summary: 'European Central Bank prepares pivot.' },
+                { title: 'NFP Beats Expectations', source: 'DailyFX', summary: 'US jobs report exceeds forecast.' },
+                { title: 'Oil Rallies on OPEC Cuts', source: 'MarketWatch', summary: 'Crude climbs as production falls.' },
+                { title: 'Gold Hits 2-Month High', source: 'Investing.com', summary: 'Safe-haven demand drives bullion.' },
+                { title: 'AUD/USD Breaks 0.71', source: 'FXPro', summary: 'Australian Dollar strengthens.' }
             ];
             
-            window.newsArticles = newsArticles;
-            
-            let html = `
-                <h3 style="margin-bottom: 20px;">📰 Market Headlines (Click to Read Full Article)</h3>
-                <style>
-                    .news-card {
-                        background: var(--card);
-                        border: 1px solid var(--border);
-                        border-radius: 4px;
-                        padding: 14px;
-                        margin-bottom: 12px;
-                        cursor: pointer;
-                        transition: all 0.2s;
-                    }
-                    .news-card:hover {
-                        border-color: var(--accent-purple);
-                        box-shadow: 0 4px 12px rgba(167, 139, 250, 0.15);
-                        background: rgba(167, 139, 250, 0.05);
-                    }
-                    .news-title {
-                        font-weight: 600;
-                        font-size: 13px;
-                        color: var(--text-primary);
-                        margin-bottom: 8px;
-                        transition: color 0.2s;
-                    }
-                    .news-card:hover .news-title {
-                        color: var(--accent-purple);
-                    }
-                    .news-badge {
-                        display: inline-block;
-                        padding: 3px 8px;
-                        background: rgba(167, 139, 250, 0.2);
-                        border-radius: 3px;
-                        font-size: 10px;
-                        font-weight: 700;
-                        color: var(--accent-purple);
-                    }
-                    .news-meta {
-                        font-size: 10px;
-                        color: var(--text-muted);
-                        margin-bottom: 8px;
-                        display: flex;
-                        gap: 12px;
-                        flex-wrap: wrap;
-                    }
-                    .news-summary {
-                        font-size: 12px;
-                        color: var(--text-secondary);
-                        line-height: 1.6;
-                    }
-                    .read-more {
-                        margin-top: 8px;
-                        font-size: 11px;
-                        color: var(--accent-purple);
-                        font-weight: 700;
-                    }
-                </style>
-            `;
-            
-            const now = new Date();
-            const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
-            const timeStr = istTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-            const dateStr = istTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            
-            for (let i = 0; i < newsArticles.length; i++) {
-                const item = newsArticles[i];
-                item.date = dateStr;
-                item.time = timeStr;
-                
-                html += `
-                    <div class="news-card" onclick="openNewsArticle(${i})">
-                        <div class="news-title">${item.title}</div>
-                        <div class="news-meta">
-                            <span class="news-badge">${item.source}</span>
-                            <span>📂 ${item.category}</span>
-                            <span>📅 ${dateStr} IST</span>
-                        </div>
-                        <div class="news-summary">${item.summary}</div>
-                        <div class="read-more">👉 Click to read full article →</div>
-                    </div>
-                `;
+            for (let i = 0; i < newsItems.length; i++) {
+                const item = newsItems[i];
+                html += '<div class="news-card">';
+                html += '<div class="news-title">' + item.title + '</div>';
+                html += '<div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">';
+                html += '<span style="font-weight: 700;">📍 ' + item.source + '</span> • Today IST';
+                html += '</div>';
+                html += '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">' + item.summary + '</div>';
+                html += '</div>';
             }
-            
-            html += `
-                <div style="margin-top: 15px; padding: 12px; background: rgba(99, 102, 241, 0.1); border-radius: 4px; border-left: 3px solid var(--accent-purple);">
-                    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">📡 News Sources Used</div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <span style="font-size: 11px; color: var(--accent-purple); font-weight: 600;">Bloomberg</span>
-                        <span style="font-size: 11px; color: var(--accent-purple); font-weight: 600;">Reuters</span>
-                        <span style="font-size: 11px; color: var(--accent-purple); font-weight: 600;">CNBC</span>
-                        <span style="font-size: 11px; color: var(--accent-purple); font-weight: 600;">FXStreet</span>
-                        <span style="font-size: 11px; color: var(--accent-purple); font-weight: 600;">DailyFX</span>
-                    </div>
-                </div>
-            `;
             
             document.getElementById('news').innerHTML = html;
         }
@@ -1674,24 +1516,49 @@
         }
 
         function renderAllTabs() {
-            renderTopBar();
-            renderDashboard();
-            renderHeatmap();
-            renderPairMatrix();
-            renderScoreCard();
-            renderRiskReward();
-            renderSurprises();
-            renderPositioning();
-            renderOverview();
-            renderInflation();
-            renderLabour();
-            renderPMI();
-            renderYields();
-            renderCross();
-            renderJuice();
-            renderHistory();
-            renderCalendar();
-            renderNews();
+            try {
+                console.log('renderAllTabs: Starting...');
+                renderTopBar();
+                console.log('✓ renderTopBar done');
+                renderDashboard();
+                console.log('✓ renderDashboard done');
+                renderHeatmap();
+                console.log('✓ renderHeatmap done');
+                renderPairMatrix();
+                console.log('✓ renderPairMatrix done');
+                renderScoreCard();
+                console.log('✓ renderScoreCard done');
+                renderRiskReward();
+                console.log('✓ renderRiskReward done');
+                renderSurprises();
+                console.log('✓ renderSurprises done');
+                renderPositioning();
+                console.log('✓ renderPositioning done');
+                renderOverview();
+                console.log('✓ renderOverview done');
+                renderInflation();
+                console.log('✓ renderInflation done');
+                renderLabour();
+                console.log('✓ renderLabour done');
+                renderPMI();
+                console.log('✓ renderPMI done');
+                renderYields();
+                console.log('✓ renderYields done');
+                renderCross();
+                console.log('✓ renderCross done');
+                renderJuice();
+                console.log('✓ renderJuice done');
+                renderHistory();
+                console.log('✓ renderHistory done');
+                renderCalendar();
+                console.log('✓ renderCalendar done');
+                renderNews();
+                console.log('✓ renderNews done');
+                console.log('renderAllTabs: Complete!');
+            } catch (e) {
+                console.error('renderAllTabs error:', e);
+                alert('Rendering error: ' + e.message);
+            }
         }
     </script>
 </body>
