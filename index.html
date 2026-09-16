@@ -12,16 +12,16 @@
         }
 
         :root {
-            --bg: #0a0e1a;
-            --card: #0f1429;
-            --border: #1a2040;
-            --text-primary: #e0e6f6;
-            --text-secondary: #8b92b0;
-            --text-muted: #5a6080;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --border: #e0e0e0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #999999;
             --accent-up: #10b981;
             --accent-down: #ef4444;
             --accent-neutral: #6366f1;
-            --accent-purple: #a78bfa;
+            --accent-purple: #7c3aed;
         }
 
         body {
@@ -37,7 +37,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8eaef 100%);
             position: fixed;
             top: 0;
             left: 0;
@@ -57,7 +57,7 @@
             padding: 40px;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .login-title {
@@ -92,7 +92,7 @@
         .input-field {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(99, 102, 241, 0.1);
+            background: #f5f5f5;
             border: 1px solid var(--border);
             border-radius: 4px;
             color: var(--text-primary);
@@ -147,7 +147,7 @@
         }
 
         .top-bar {
-            background: #0a0e1a;
+            background: #ffffff;
             border-bottom: 1px solid var(--border);
             padding: 12px 20px;
             display: flex;
@@ -207,7 +207,7 @@
             gap: 0;
             border-bottom: 1px solid var(--border);
             overflow-x: auto;
-            background: #0a0e1a;
+            background: #ffffff;
             padding: 0 20px;
         }
 
@@ -478,6 +478,10 @@
             <div class="tab" onclick="switchTab('history')">📊 CPI</div>
             <div class="tab" onclick="switchTab('calendar')">📅 Calendar</div>
             <div class="tab" onclick="switchTab('news')">📰 News</div>
+            <div class="tab" onclick="switchTab('pairDeepDive')">📊 Pair Dive</div>
+            <div class="tab" onclick="switchTab('currencyStrength')">🏆 Strength</div>
+            <div class="tab" onclick="switchTab('tradingOpportunities')">⚡ Opportunities</div>
+            <div class="tab" onclick="switchTab('centralBanks')">🏦 Central Banks</div>
         </div>
 
         <div id="dashboard" class="content active"></div>
@@ -496,6 +500,10 @@
         <div id="juice" class="content"></div>
         <div id="history" class="content"></div>
         <div id="calendar" class="content"></div>
+        <div id="pairDeepDive" class="content"></div>
+        <div id="currencyStrength" class="content"></div>
+        <div id="tradingOpportunities" class="content"></div>
+        <div id="centralBanks" class="content"></div>
         <div id="news" class="content"></div>
     </div>
 
@@ -1524,6 +1532,139 @@
             document.getElementById('news').innerHTML = html;
         }
 
+
+        function renderPairDeepDive() {
+            const pairs = [
+                { pair: 'EUR/USD', rate: 1.0850, bias: 'BEARISH', reason: 'ECB dovish, USD strength', score: 75, chart: 'down' },
+                { pair: 'GBP/USD', rate: 1.2750, bias: 'BULLISH', reason: 'BOE hawkish signals', score: 68, chart: 'up' },
+                { pair: 'USD/JPY', rate: 155.50, bias: 'BULLISH', reason: 'Rate divergence widening', score: 82, chart: 'up' },
+                { pair: 'AUD/USD', rate: 0.7150, bias: 'BULLISH', reason: 'RBA hawkish, commodity support', score: 70, chart: 'up' },
+                { pair: 'USD/CAD', rate: 1.3680, bias: 'BEARISH', reason: 'Oil strength, BoC cuts coming', score: 65, chart: 'down' },
+            ];
+
+            let html = '<h3 style="margin-bottom: 20px;">📊 Pair Deep Dive Analysis</h3>';
+            html += '<div class="grid">';
+            
+            for (const p of pairs) {
+                const biasColor = p.bias === 'BULLISH' ? 'var(--accent-up)' : 'var(--accent-down)';
+                html += '<div class="card" style="cursor: pointer; border: 2px solid rgba(167, 139, 250, 0.2);">';
+                html += '<div style="font-size: 16px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">' + p.pair + '</div>';
+                html += '<div style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Rate: ' + p.rate + '</div>';
+                html += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">';
+                html += '<span style="background: ' + biasColor + '; color: white; padding: 4px 10px; border-radius: 3px; font-weight: 700; font-size: 11px;">' + p.bias + '</span>';
+                html += '<span style="font-size: 12px; color: var(--text-secondary);">Confidence: ' + p.score + '%</span>';
+                html += '</div>';
+                html += '<div style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">📌 ' + p.reason + '</div>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            document.getElementById('pairDeepDive').innerHTML = html;
+        }
+
+        function renderCurrencyStrength() {
+            const currencies = [
+                { rank: 1, currency: 'USD', flag: '🇺🇸', strength: 85, drivers: 'Strong economy, rate hikes' },
+                { rank: 2, currency: 'JPY', flag: '🇯🇵', strength: 78, drivers: 'Safe-haven demand, rates up' },
+                { rank: 3, currency: 'GBP', flag: '🇬🇧', strength: 72, drivers: 'BOE hawkish, inflation sticky' },
+                { rank: 4, currency: 'AUD', flag: '🇦🇺', strength: 68, drivers: 'RBA hawkish, commodity support' },
+                { rank: 5, currency: 'CAD', flag: '🇨🇦', strength: 65, drivers: 'Oil prices up, rate cuts' },
+                { rank: 6, currency: 'CHF', flag: '🇨🇭', strength: 62, drivers: 'SNB hawkish, safe-haven' },
+                { rank: 7, currency: 'NZD', flag: '🇳🇿', strength: 58, drivers: 'RBNZ hawkish bias' },
+                { rank: 8, currency: 'EUR', flag: '🇪🇺', strength: 52, drivers: 'ECB dovish, growth weak' },
+                { rank: 9, currency: 'Gold', flag: '🟡', strength: 55, drivers: 'Safe-haven bid, inflation hedge' },
+                { rank: 10, currency: 'Oil', flag: '🛢️', strength: 72, drivers: 'OPEC cuts, geopolitics' },
+            ];
+
+            let html = '<h3 style="margin-bottom: 20px;">🏆 Currency & Commodity Strength Ranking</h3>';
+            html += '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead style="background: rgba(99, 102, 241, 0.2); border-bottom: 2px solid var(--border);">';
+            html += '<tr><th style="padding: 12px; text-align: left; font-weight: 700; color: var(--accent-purple);">Rank</th><th style="text-align: left; font-weight: 700; color: var(--accent-purple);">Currency</th><th style="text-align: left; font-weight: 700; color: var(--accent-purple);">Strength</th><th style="text-align: left; font-weight: 700; color: var(--accent-purple);">Key Drivers</th></tr>';
+            html += '</thead><tbody>';
+            
+            for (const c of currencies) {
+                const strengthBar = Math.round(c.strength);
+                html += '<tr style="border-bottom: 1px solid var(--border);">';
+                html += '<td style="padding: 12px; font-weight: 700;">#' + c.rank + '</td>';
+                html += '<td style="padding: 12px;"><span style="font-size: 18px;">' + c.flag + '</span> ' + c.currency + '</td>';
+                html += '<td style="padding: 12px;"><div style="background: rgba(99, 102, 241, 0.1); border-radius: 3px; overflow: hidden; height: 20px;"><div style="background: var(--accent-purple); width: ' + strengthBar + '%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; color: white; font-size: 10px; font-weight: 700;">' + strengthBar + '%</div></div></td>';
+                html += '<td style="padding: 12px; font-size: 12px; color: var(--text-secondary);">' + c.drivers + '</td>';
+                html += '</tr>';
+            }
+            
+            html += '</tbody></table>';
+            document.getElementById('currencyStrength').innerHTML = html;
+        }
+
+        function renderTradingOpportunities() {
+            const opportunities = [
+                { pair: 'USD/JPY', signal: 'BUY', entry: 155.50, target: 160.00, stop: 152.00, rr: 2.3, confidence: 'HIGH', reason: 'Rate divergence widening, BOJ on hold' },
+                { pair: 'EUR/USD', signal: 'SELL', entry: 1.0850, target: 1.0650, stop: 1.0950, rr: 2.0, confidence: 'HIGH', reason: 'ECB pivot dovish, inflation falling' },
+                { pair: 'GBP/USD', signal: 'BUY', entry: 1.2750, target: 1.3050, stop: 1.2600, rr: 1.8, confidence: 'MEDIUM', reason: 'BOE hawkish bias still intact' },
+                { pair: 'AUD/USD', signal: 'BUY', entry: 0.7150, target: 0.7350, stop: 0.7050, rr: 2.0, confidence: 'MEDIUM', reason: 'Commodity support, RBA hawkish' },
+                { pair: 'XAU/USD', signal: 'BUY', entry: 2430, target: 2550, stop: 2380, rr: 2.4, confidence: 'MEDIUM', reason: 'Safe-haven demand, geopolitical risk' },
+            ];
+
+            let html = '<h3 style="margin-bottom: 20px;">⚡ Top Trading Opportunities (What Just Came Out)</h3>';
+            html += '<div class="grid">';
+            
+            for (const opp of opportunities) {
+                const signalColor = opp.signal === 'BUY' ? 'var(--accent-up)' : 'var(--accent-down)';
+                const confColor = opp.confidence === 'HIGH' ? 'var(--accent-up)' : opp.confidence === 'MEDIUM' ? '#f59e0b' : 'var(--accent-down)';
+                
+                html += '<div class="card">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+                html += '<div style="font-size: 15px; font-weight: 700; color: var(--accent-purple);">' + opp.pair + '</div>';
+                html += '<span style="background: ' + signalColor + '; color: white; padding: 4px 10px; border-radius: 3px; font-weight: 700; font-size: 11px;">' + opp.signal + '</span>';
+                html += '</div>';
+                html += '<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.6;">';
+                html += '📍 Entry: ' + opp.entry + '<br>';
+                html += '🎯 Target: ' + opp.target + '<br>';
+                html += '🛑 Stop: ' + opp.stop + '<br>';
+                html += '📊 R:R: ' + opp.rr + ':1';
+                html += '</div>';
+                html += '<div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; padding-top: 8px; border-top: 1px solid var(--border);">' + opp.reason + '</div>';
+                html += '<div style="background: ' + confColor + '; color: white; padding: 4px 8px; border-radius: 3px; font-weight: 700; font-size: 10px; display: inline-block;">' + opp.confidence + '</div>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            document.getElementById('tradingOpportunities').innerHTML = html;
+        }
+
+        function renderCentralBanks() {
+            const banks = [
+                { bank: 'Federal Reserve (USD)', rate: '3.50-3.75%', nextMeeting: 'Sep 18', bias: 'HAWKISH', recentSpeech: 'Powell: Inflation sticky, cautious on cuts' },
+                { bank: 'ECB (EUR)', rate: '2.25%', nextMeeting: 'Oct 17', bias: 'DOVISH', recentSpeech: 'Lagarde: Rates plateau, cuts coming Q2 2026' },
+                { bank: 'BoE (GBP)', rate: '5.25%', nextMeeting: 'Sep 19', bias: 'HAWKISH', recentSpeech: 'Bailey: Holding to restrict inflation further' },
+                { bank: 'BoJ (JPY)', rate: '0.00-0.10%', nextMeeting: 'Sep 20', bias: 'ON HOLD', recentSpeech: 'Ueda: Will stay accommodative, no hurry' },
+                { bank: 'RBA (AUD)', rate: '4.10%', nextMeeting: 'Oct 1', bias: 'HAWKISH', recentSpeech: 'Bullock: More time needed, holding steady' },
+                { bank: 'SNB (CHF)', rate: '1.50%', nextMeeting: 'Sep 26', bias: 'HAWKISH', recentSpeech: 'Kohn: Ready to hike if inflation persists' },
+            ];
+
+            let html = '<h3 style="margin-bottom: 20px;">🏦 Central Banks Rate Comparison & Bias</h3>';
+            html += '<div class="grid">';
+            
+            for (const bank of banks) {
+                const biasColor = bank.bias === 'HAWKISH' ? 'var(--accent-up)' : bank.bias === 'DOVISH' ? 'var(--accent-down)' : '#f59e0b';
+                
+                html += '<div class="card">';
+                html += '<div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">' + bank.bank + '</div>';
+                html += '<div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">' + bank.rate + '</div>';
+                html += '<div style="display: flex; gap: 10px; margin-bottom: 10px;">';
+                html += '<span style="background: ' + biasColor + '; color: white; padding: 4px 10px; border-radius: 3px; font-weight: 700; font-size: 10px;">' + bank.bias + '</span>';
+                html += '<span style="background: rgba(99, 102, 241, 0.1); color: var(--accent-purple); padding: 4px 10px; border-radius: 3px; font-weight: 700; font-size: 10px;">Next: ' + bank.nextMeeting + '</span>';
+                html += '</div>';
+                html += '<div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 8px;">';
+                html += '💬 ' + bank.recentSpeech;
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            document.getElementById('centralBanks').innerHTML = html;
+        }
+
         function renderAllTabs() {
             try {
                 console.log('Starting renderAllTabs...');
@@ -1563,6 +1704,14 @@
                 console.log('✓ renderCalendar done');
                 renderNews();
                 console.log('✓ renderNews done');
+                renderPairDeepDive();
+                console.log('✓ renderPairDeepDive done');
+                renderCurrencyStrength();
+                console.log('✓ renderCurrencyStrength done');
+                renderTradingOpportunities();
+                console.log('✓ renderTradingOpportunities done');
+                renderCentralBanks();
+                console.log('✓ renderCentralBanks done');
                 console.log('renderAllTabs: Complete!');
             } catch (e) {
                 console.error('renderAllTabs error:', e);
