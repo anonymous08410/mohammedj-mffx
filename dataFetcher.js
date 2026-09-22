@@ -33,7 +33,7 @@ const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
 // different ID (CP0000EZ19M086NEST) if you'd rather switch to that later.
 const CURRENCY_TO_OECD = {
   USD: 'USA', EUR: 'DEU', GBP: 'GBR', JPY: 'JPN', CAD: 'CAN',
-  AUD: 'AUS', NZD: 'NZL', CHF: 'CHE', SEK: 'SWE', NOK: 'NOR'
+  AUD: 'AUS', NZD: 'NZL', CHF: 'CH', SEK: 'SWE', NOK: 'NOR'
 };
 
 const COMMODITY_SYMBOLS = {
@@ -147,7 +147,7 @@ async function refreshLiveData(data) {
       failed++; failures.push(`${ccy} CPI: ${cpi.error}`);
     }
 
-    const unemployment = await fetchFredLatest(`LRHUTTTT${oecdCode}M156S`);
+    const unemployment = await fetchFredLatest(`LRHUTTTT${oecdCode}Q156S`);
     if (unemployment.value !== null) {
       data.g10Data[ccy].macroData.unemployment = unemployment.value;
       ok++;
