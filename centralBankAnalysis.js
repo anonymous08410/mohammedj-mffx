@@ -140,7 +140,10 @@ ${statement.text}`;
     })
   });
 
-  if (!res.ok) throw new Error(`Claude API HTTP ${res.status}`);
+  if (!res.ok) {
+    const bodyText = await res.text().catch(() => '');
+    throw new Error(`Claude API HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 300) : ''}`);
+  }
   const json = await res.json();
   const textBlock = (json.content || []).find(b => b.type === 'text');
   if (!textBlock) throw new Error('No text in Claude response');
