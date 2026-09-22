@@ -22,16 +22,16 @@ if (!ANTHROPIC_API_KEY) console.warn('[centralBankAnalysis] ANTHROPIC_API_KEY no
 // URL if one fails. "none" means no reliable public feed was found — that
 // bank's analysis stays unavailable until you supply one.
 const CENTRAL_BANK_FEEDS = {
-  USD: { name: 'Federal Reserve', url: 'https://www.federalreserve.gov/feeds/press_monetary.xml', confidence: 'confirmed' },
-  EUR: { name: 'European Central Bank', url: 'https://www.ecb.europa.eu/rss/pressmp.xml', confidence: 'unverified' },
-  GBP: { name: 'Bank of England', url: 'https://www.bankofengland.co.uk/rss/news', confidence: 'unverified' },
-  CAD: { name: 'Bank of Canada', url: 'https://www.bankofcanada.ca/content_type/press-releases/feed/', confidence: 'unverified' },
-  AUD: { name: 'Reserve Bank of Australia', url: 'https://www.rba.gov.au/rss/rss-cb-media-releases.xml', confidence: 'unverified' },
-  JPY: { name: 'Bank of Japan', url: null, confidence: 'none' },
-  NZD: { name: 'Reserve Bank of New Zealand', url: null, confidence: 'none' },
-  CHF: { name: 'Swiss National Bank', url: null, confidence: 'none' },
-  SEK: { name: 'Sveriges Riksbank', url: null, confidence: 'none' },
-  NOK: { name: 'Norges Bank', url: null, confidence: 'none' }
+  USD: { name: 'Federal Reserve', url: 'https://www.federalreserve.gov/feeds/press_monetary.xml', confidence: 'confirmed', keywords: [] },
+  EUR: { name: 'European Central Bank', url: 'https://www.ecb.europa.eu/rss/press.xml', confidence: 'confirmed', keywords: ['monetary policy', 'governing council', 'interest rate'] },
+  GBP: { name: 'Bank of England', url: 'https://www.bankofengland.co.uk/rss/news', confidence: 'unverified', keywords: ['bank rate', 'mpc', 'monetary policy'] },
+  CAD: { name: 'Bank of Canada', url: 'https://www.bankofcanada.ca/content_type/press-releases/feed/', confidence: 'unverified', keywords: ['interest rate', 'policy rate'] },
+  AUD: { name: 'Reserve Bank of Australia', url: 'https://www.rba.gov.au/rss/rss-cb-media-releases.xml', confidence: 'unverified', keywords: ['cash rate', 'monetary policy'] },
+  JPY: { name: 'Bank of Japan', url: null, confidence: 'none', keywords: [] },
+  NZD: { name: 'Reserve Bank of New Zealand', url: null, confidence: 'none', keywords: [] },
+  CHF: { name: 'Swiss National Bank', url: null, confidence: 'none', keywords: [] },
+  SEK: { name: 'Sveriges Riksbank', url: null, confidence: 'none', keywords: [] },
+  NOK: { name: 'Norges Bank', url: null, confidence: 'none', keywords: [] }
 };
 
 function stripHtml(html) {
@@ -46,27 +46,44 @@ function stripHtml(html) {
     .trim();
 }
 
-function extractLatestRssItem(xml) {
-  const itemMatch = xml.match(/<item[\s\S]*?<\/item>/i);
-  if (!itemMatch) return null;
-  const item = itemMatch[0];
-  const title = (item.match(/<title>([\s\S]*?)<\/title>/i) || [])[1];
-  const link = (item.match(/<link>([\s\S]*?)<\/link>/i) || [])[1];
-  const description = (item.match(/<description>([\s\S]*?)<\/description>/i) || [])[1];
-  const pubDate = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i) || [])[1];
-  return {
-    title: title ? stripHtml(title.replace('<![CDATA[', '').replace(']]>', '')) : null,
-    link: link ? link.replace('<![CDATA[', '').replace(']]>', '').trim() : null,
-    description: description ? stripHtml(description.replace('<![CDATA[', '').replace(']]>', '')) : '',
-    pubDate: pubDate || null
-  };
+function extractLatestRssItem(xml, preferKeywords = []) {
+  const items = xml.match(/<item[\s\S]*?<\/item>/gi) || [];
+  if (items.length === 0) return null;
+
+  function parseItem(item) {
+    const title = (item.match(/<title>([\s\S]*?)<\/title>/i) || [])[1];
+    const link = (item.match(/<link>([\s\S]*?)<\/link>/i) || [])[1];
+    const description = (item.match(/<description>([\s\S]*?)<\/description>/i) || [])[1];
+    const pubDate = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i) || [])[1];
+    return {
+      title: title ? stripHtml(title.replace('<![CDATA[', '').replace(']]>', '')) : null,
+      link: link ? link.replace('<![CDATA[', '').replace(']]>', '').trim() : null,
+      description: description ? stripHtml(description.replace('<![CDATA[', '').replace(']]>', '')) : '',
+      pubDate: pubDate || null
+    };
+  }
+
+  // If the feed mixes content types (speeches, general press, etc.), prefer
+  // the first item whose title actually matches what we're looking for
+  // rather than blindly taking whatever happens to be newest.
+  if (preferKeywords.length > 0) {
+    for (const raw of items) {
+      const parsed = parseItem(raw);
+      if (parsed.title && preferKeywords.some(kw => parsed.title.toLowerCase().includes(kw))) {
+        return parsed;
+      }
+    }
+  }
+
+  // No keyword match (or none requested) — fall back to the newest item
+  return parseItem(items[0]);
 }
 
-async function fetchLatestStatementText(feedUrl) {
+async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
   const res = await fetch(feedUrl);
   if (!res.ok) throw new Error(`Feed HTTP ${res.status}`);
   const xml = await res.text();
-  const item = extractLatestRssItem(xml);
+  const item = extractLatestRssItem(xml, preferKeywords);
   if (!item || !item.link) throw new Error('No item found in feed');
 
   // Try to fetch the full press release page for more text than the RSS snippet
@@ -117,7 +134,7 @@ ${statement.text}`;
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }]
     })
@@ -145,7 +162,7 @@ async function refreshCentralBankAnalysis(data) {
       continue;
     }
     try {
-      const statement = await fetchLatestStatementText(bank.url);
+      const statement = await fetchLatestStatementText(bank.url, bank.keywords || []);
       const analysis = await summarizeWithClaude(bank.name, ccy, statement);
       data.centralBankAnalysis[ccy] = {
         ...analysis,

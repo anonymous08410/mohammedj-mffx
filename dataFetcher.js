@@ -52,19 +52,27 @@ const COMMODITY_SYMBOLS = {
 const SNAPSHOT_DIR = path.join(__dirname, 'data-snapshots');
 if (!fs.existsSync(SNAPSHOT_DIR)) fs.mkdirSync(SNAPSHOT_DIR);
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function fetchFredLatest(seriesId) {
-  if (!FRED_API_KEY) return null;
+  if (!FRED_API_KEY) return { value: null, error: 'FRED_API_KEY not set' };
   const url = `${FRED_BASE}?series_id=${seriesId}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`;
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      // FRED puts the real reason in the response body even on 4xx — surface it
+      const bodyText = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 200) : ''}`);
+    }
     const json = await res.json();
     const obs = json.observations && json.observations[0];
-    if (!obs || obs.value === '.') return null; // '.' is FRED's "no data yet" marker
-    return parseFloat(obs.value);
+    if (!obs || obs.value === '.') return { value: null, error: 'No observation data returned' };
+    return { value: parseFloat(obs.value), error: null };
   } catch (err) {
     console.error(`[dataFetcher] FRED ${seriesId} failed:`, err.message);
-    return null;
+    return { value: null, error: err.message };
   }
 }
 
@@ -73,27 +81,28 @@ async function fetchFrankfurterRates(base = 'USD') {
     const res = await fetch(`https://api.frankfurter.app/latest?from=${base}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
-    return json.rates || null;
+    return { value: json.rates || null, error: json.rates ? null : 'No rates in response' };
   } catch (err) {
     console.error('[dataFetcher] Frankfurter fetch failed:', err.message);
-    return null;
+    return { value: null, error: err.message };
   }
 }
 
 async function fetchTwelveDataPrice(symbol) {
-  if (!TWELVEDATA_API_KEY) return null;
+  if (!TWELVEDATA_API_KEY) return { value: null, error: 'TWELVEDATA_API_KEY not set' };
   try {
     const res = await fetch(`https://api.twelvedata.com/price?symbol=${encodeURIComponent(symbol)}&apikey=${TWELVEDATA_API_KEY}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     if (json.status === 'error' || !json.price) {
-      console.error(`[dataFetcher] TwelveData ${symbol}:`, json.message || 'no price in response');
-      return null;
+      const msg = json.message || 'no price in response';
+      console.error(`[dataFetcher] TwelveData ${symbol}:`, msg);
+      return { value: null, error: msg };
     }
-    return parseFloat(json.price);
+    return { value: parseFloat(json.price), error: null };
   } catch (err) {
     console.error(`[dataFetcher] TwelveData ${symbol} failed:`, err.message);
-    return null;
+    return { value: null, error: err.message };
   }
 }
 
@@ -130,51 +139,58 @@ async function refreshLiveData(data) {
     if (!data.g10Data[ccy]) continue;
 
     const cpi = await fetchFredLatest(`CPALTT01${oecdCode}M659N`);
-    if (cpi !== null) {
-      data.g10Data[ccy].inflation = cpi;
-      data.g10Data[ccy].macroData.cpi_yoy = cpi;
+    if (cpi.value !== null) {
+      data.g10Data[ccy].inflation = cpi.value;
+      data.g10Data[ccy].macroData.cpi_yoy = cpi.value;
       ok++;
     } else {
-      failed++; failures.push(`${ccy} CPI`);
+      failed++; failures.push(`${ccy} CPI: ${cpi.error}`);
     }
 
     const unemployment = await fetchFredLatest(`LRHUTTTT${oecdCode}M156S`);
-    if (unemployment !== null) {
-      data.g10Data[ccy].macroData.unemployment = unemployment;
+    if (unemployment.value !== null) {
+      data.g10Data[ccy].macroData.unemployment = unemployment.value;
       ok++;
     } else {
-      failed++; failures.push(`${ccy} unemployment`);
+      failed++; failures.push(`${ccy} unemployment: ${unemployment.error}`);
     }
   }
 
   // US GDP growth — kept US-only for now; other countries' FRED growth series
   // aren't consistent enough in naming to trust without individually verifying each one.
   const usGdp = await fetchFredLatest('A191RL1Q225SBEA');
-  if (usGdp !== null) {
-    data.g10Data.USD.macroData.gdpGrowth = usGdp;
+  if (usGdp.value !== null) {
+    data.g10Data.USD.macroData.gdpGrowth = usGdp.value;
     ok++;
   } else {
-    failed++; failures.push('USD GDP growth');
+    failed++; failures.push(`USD GDP growth: ${usGdp.error}`);
   }
 
   // --- FX rates (Frankfurter, no key) ---
   const fxRates = await fetchFrankfurterRates('USD');
-  if (fxRates) {
-    data.fxRates = { base: 'USD', rates: fxRates, updated: new Date().toISOString() };
+  if (fxRates.value) {
+    data.fxRates = { base: 'USD', rates: fxRates.value, updated: new Date().toISOString() };
     ok++;
   } else {
-    failed++; failures.push('FX rates');
+    failed++; failures.push(`FX rates: ${fxRates.error}`);
   }
 
   // --- Commodities (Twelve Data) ---
+  // Free tier caps at 8 requests/minute, so space calls out instead of firing
+  // them back-to-back — otherwise everything after the first few silently
+  // rate-limits.
   data.commodities = data.commodities || {};
+  let commodityIndex = 0;
   for (const [key, symbol] of Object.entries(COMMODITY_SYMBOLS)) {
+    if (commodityIndex > 0) await sleep(8000); // stay under 8 req/min
+    commodityIndex++;
+
     const price = await fetchTwelveDataPrice(symbol);
-    if (price !== null) {
-      data.commodities[key] = { price, symbol, updated: new Date().toISOString() };
+    if (price.value !== null) {
+      data.commodities[key] = { price: price.value, symbol, updated: new Date().toISOString() };
       ok++;
     } else {
-      failed++; failures.push(key);
+      failed++; failures.push(`${key}: ${price.error}`);
     }
   }
 
