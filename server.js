@@ -983,6 +983,13 @@ const data = {
   ]
 };
 
+const { startLiveDataRefresh } = require('./dataFetcher');
+const { startCentralBankAnalysis } = require('./centralBankAnalysis');
+const indicatorExplainers = require('./indicatorExplainers');
+
+startLiveDataRefresh(data, 30); // live macro/FX/commodities, every 30 min
+startCentralBankAnalysis(data, 24); // central bank statement analysis, once/day
+
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -1005,7 +1012,59 @@ const server = http.createServer((req, res) => {
     }));
   } else if (req.url === '/api/health') {
     res.writeHead(200);
-    res.end(JSON.stringify({ status: 'ok' }));
+    res.end(JSON.stringify({
+      status: 'ok',
+      lastLiveUpdate: data.lastLiveUpdate || null,
+      liveDataHealth: data.liveDataHealth || null,
+      centralBankAnalysisHealth: data.centralBankAnalysisHealth || null
+    }));
+  } else if (req.url.startsWith('/api/indicator')) {
+    // /api/indicator?type=cpi_yoy&currency=USD
+    const parsed = new URL(req.url, `http://${req.headers.host}`);
+    const type = parsed.searchParams.get('type');
+    const currency = parsed.searchParams.get('currency');
+    const explainer = indicatorExplainers[type];
+    const ccyData = data.g10Data[currency];
+
+    if (!explainer || !ccyData) {
+      res.writeHead(400);
+      res.end(JSON.stringify({ error: 'Unknown indicator type or currency', validTypes: Object.keys(indicatorExplainers) }));
+      return;
+    }
+
+    let actual = null;
+    if (type === 'policy_rate') actual = ccyData.rate;
+    else if (type === 'cpi_yoy') actual = ccyData.macroData ? ccyData.macroData.cpi_yoy : null;
+    else if (type === 'gdp_growth') actual = ccyData.macroData ? ccyData.macroData.gdpGrowth : null;
+    else if (type === 'unemployment') actual = ccyData.macroData ? ccyData.macroData.unemployment : null;
+
+    res.writeHead(200);
+    res.end(JSON.stringify({
+      currency,
+      type,
+      label: explainer.label,
+      what_is_this: explainer.what_is_this,
+      typical_impact: explainer.typical_impact,
+      actual,
+      lastLiveUpdate: data.lastLiveUpdate || null
+    }));
+  } else if (req.url.startsWith('/api/central-bank')) {
+    // /api/central-bank?currency=USD
+    const parsed = new URL(req.url, `http://${req.headers.host}`);
+    const currency = parsed.searchParams.get('currency');
+    const analysis = data.centralBankAnalysis ? data.centralBankAnalysis[currency] : null;
+
+    if (!analysis) {
+      res.writeHead(404);
+      res.end(JSON.stringify({
+        error: 'No analysis available yet for this currency',
+        note: 'Either the daily refresh hasn\'t run yet, or this bank has no confirmed statement feed configured — check /api/health'
+      }));
+      return;
+    }
+
+    res.writeHead(200);
+    res.end(JSON.stringify({ currency, ...analysis }));
   } else {
     res.writeHead(200);
     res.end(JSON.stringify({ message: 'Ultimate G10 Macro Dashboard API' }));
