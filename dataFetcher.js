@@ -39,10 +39,14 @@ const CURRENCY_TO_OECD = {
 const COMMODITY_SYMBOLS = {
   gold: 'XAU/USD',
   silver: 'XAG/USD',
+  platinum: 'XPT/USD',
+  palladium: 'XPD/USD',
   oil_wti: 'WTI/USD',
   oil_brent: 'BRENT/USD',
+  natgas: 'NG/USD',
   copper: 'XCU/USD',
-  natgas: 'NG/USD'
+  wheat: 'WHEAT/USD',
+  corn: 'CORN/USD'
 };
 
 const SNAPSHOT_DIR = path.join(__dirname, 'data-snapshots');
