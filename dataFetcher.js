@@ -37,16 +37,10 @@ const CURRENCY_TO_OECD = {
 };
 
 const COMMODITY_SYMBOLS = {
-  gold: 'XAU/USD',
-  silver: 'XAG/USD',
-  platinum: 'XPT/USD',
-  palladium: 'XPD/USD',
-  oil_wti: 'WTI/USD',
-  oil_brent: 'BRENT/USD',
-  natgas: 'NG/USD',
-  copper: 'XCU/USD',
-  wheat: 'WHEAT/USD',
-  corn: 'CORN/USD'
+  gold: 'XAU/USD'
+  // silver, platinum, palladium, oil (WTI/Brent), nat gas, copper, wheat, corn
+  // all 404 on the free Twelve Data plan — only gold is included in the free
+  // tier's commodity access. Add them back here if the plan is ever upgraded.
 };
 
 const SNAPSHOT_DIR = path.join(__dirname, 'data-snapshots');
