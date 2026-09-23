@@ -104,7 +104,7 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
   return { title: item.title, link: item.link, pubDate: item.pubDate, text: fullText };
 }
 
-async function summarizeWithGemini(bankName, currency, statement) {
+async function summarizeWithGemini(bankName, currency, statement, isRetry = false) {
   const prompt = `You are analyzing an official central bank statement for an FX trading dashboard. Below is the real text of the latest statement from the ${bankName} (${currency}), published ${statement.pubDate || 'recently'}, titled "${statement.title}".
 
 Using ONLY the information in this statement — do not invent facts, numbers, or votes not present in the text — produce a JSON object with this exact shape:
@@ -141,6 +141,10 @@ ${statement.text}`;
 
   if (!res.ok) {
     const bodyText = await res.text().catch(() => '');
+    if (res.status === 503 && !isRetry) {
+      await new Promise(r => setTimeout(r, 10000));
+      return summarizeWithGemini(bankName, currency, statement, true);
+    }
     throw new Error(`Gemini API HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 300) : ''}`);
   }
   const json = await res.json();
