@@ -1,7 +1,8 @@
 // centralBankAnalysis.js
 //
 // For each G10 central bank: pulls the latest real statement/press-release
-// text from that bank's own official RSS feed, then asks Claude to turn it
+// text from that bank's own official RSS feed, then asks Google Gemini (free
+// tier) to turn it
 // into the structured analysis your dashboard displays (The Read, what
 // changed since last meeting, vote split, per-category commentary).
 //
@@ -13,8 +14,8 @@
 // Runs once/day (not every 30 min like dataFetcher) since central bank
 // statements only change around meeting dates, not continuously.
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-if (!ANTHROPIC_API_KEY) console.warn('[centralBankAnalysis] ANTHROPIC_API_KEY not set — statement analysis will not run.');
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) console.warn('[centralBankAnalysis] GEMINI_API_KEY not set — statement analysis will not run.');
 
 // Confidence-labeled feed map. "confirmed" feeds follow a verified URL
 // pattern from that bank's own feed index. "unverified" are a best guess —
@@ -103,7 +104,7 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
   return { title: item.title, link: item.link, pubDate: item.pubDate, text: fullText };
 }
 
-async function summarizeWithClaude(bankName, currency, statement) {
+async function summarizeWithGemini(bankName, currency, statement) {
   const prompt = `You are analyzing an official central bank statement for an FX trading dashboard. Below is the real text of the latest statement from the ${bankName} (${currency}), published ${statement.pubDate || 'recently'}, titled "${statement.title}".
 
 Using ONLY the information in this statement — do not invent facts, numbers, or votes not present in the text — produce a JSON object with this exact shape:
@@ -126,34 +127,33 @@ Respond with ONLY the JSON object, no other text, no markdown fences.
 STATEMENT TEXT:
 ${statement.text}`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-5',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
+      })
+    }
+  );
 
   if (!res.ok) {
     const bodyText = await res.text().catch(() => '');
-    throw new Error(`Claude API HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 300) : ''}`);
+    throw new Error(`Gemini API HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 300) : ''}`);
   }
   const json = await res.json();
-  const textBlock = (json.content || []).find(b => b.type === 'text');
-  if (!textBlock) throw new Error('No text in Claude response');
+  const candidate = json.candidates && json.candidates[0];
+  const textPart = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0];
+  if (!textPart || !textPart.text) throw new Error('No text in Gemini response');
 
-  const cleaned = textBlock.text.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+  const cleaned = textPart.text.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
   return JSON.parse(cleaned);
 }
 
 async function refreshCentralBankAnalysis(data) {
-  if (!ANTHROPIC_API_KEY) return;
+  if (!GEMINI_API_KEY) return;
   console.log('[centralBankAnalysis] Refresh starting:', new Date().toISOString());
   data.centralBankAnalysis = data.centralBankAnalysis || {};
   let ok = 0, failed = 0;
@@ -166,7 +166,7 @@ async function refreshCentralBankAnalysis(data) {
     }
     try {
       const statement = await fetchLatestStatementText(bank.url, bank.keywords || []);
-      const analysis = await summarizeWithClaude(bank.name, ccy, statement);
+      const analysis = await summarizeWithGemini(bank.name, ccy, statement);
       data.centralBankAnalysis[ccy] = {
         ...analysis,
         source_title: statement.title,
