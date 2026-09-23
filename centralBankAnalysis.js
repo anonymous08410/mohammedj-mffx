@@ -107,7 +107,7 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
 async function summarizeWithGemini(bankName, currency, statement, isRetry = false) {
   const prompt = `You are analyzing an official central bank statement for an FX trading dashboard. Below is the real text of the latest statement from the ${bankName} (${currency}), published ${statement.pubDate || 'recently'}, titled "${statement.title}".
 
-Using ONLY the information in this statement — do not invent facts, numbers, or votes not present in the text — produce a JSON object with this exact shape:
+Using ONLY the information in this statement — do not invent facts, numbers, or votes not present in the text — produce a JSON object with this exact shape. Keep every field concise (1-2 short sentences max, never more):
 
 {
   "the_read": "2-3 sentence plain-English summary of the policy decision and its significance",
@@ -134,7 +134,7 @@ ${statement.text}`;
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
+        generationConfig: { temperature: 0.2, maxOutputTokens: 2500 }
       })
     }
   );
@@ -153,7 +153,15 @@ ${statement.text}`;
   if (!textPart || !textPart.text) throw new Error('No text in Gemini response');
 
   const cleaned = textPart.text.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // Fallback: extract just the outermost {...} block in case there's stray
+    // text around it (Gemini occasionally adds a preamble despite instructions)
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    throw e;
+  }
 }
 
 async function refreshCentralBankAnalysis(data) {
