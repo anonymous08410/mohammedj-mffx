@@ -32,8 +32,8 @@ const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
 // EUR uses Germany (DEU) as a proxy — FRED's true euro-area HICP series has a
 // different ID (CP0000EZ19M086NEST) if you'd rather switch to that later.
 const CURRENCY_TO_OECD = {
-  USD: 'USA', EUR: 'DEU', GBP: 'GBR', JPY: 'JPN', CAD: 'CAN',
-  AUD: 'AUS', NZD: 'NZL', CHF: 'CH', SEK: 'SWE', NOK: 'NOR'
+  USD: 'US', EUR: 'DE', GBP: 'GB', JPY: 'JP', CAD: 'CA',
+  AUD: 'AU', NZD: 'NZ', CHF: 'CH', SEK: 'SE', NOK: 'NO'
 };
 
 const COMMODITY_SYMBOLS = {
