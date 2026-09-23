@@ -104,7 +104,7 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
   return { title: item.title, link: item.link, pubDate: item.pubDate, text: fullText };
 }
 
-async function summarizeWithGemini(bankName, currency, statement, isRetry = false) {
+async function summarizeWithGemini(bankName, currency, statement, attempt = 0) {
   const prompt = `You are analyzing an official central bank statement for an FX trading dashboard. Below is the real text of the latest statement from the ${bankName} (${currency}), published ${statement.pubDate || 'recently'}, titled "${statement.title}".
 
 Using ONLY the information in this statement — do not invent facts, numbers, or votes not present in the text — produce a JSON object with this exact shape. Keep every field concise (1-2 short sentences max, never more):
@@ -141,9 +141,9 @@ ${statement.text}`;
 
   if (!res.ok) {
     const bodyText = await res.text().catch(() => '');
-    if (res.status === 503 && !isRetry) {
-      await new Promise(r => setTimeout(r, 10000));
-      return summarizeWithGemini(bankName, currency, statement, true);
+    if (res.status === 503 && attempt < 2) {
+      await new Promise(r => setTimeout(r, 10000 * (attempt + 1))); // 10s, then 20s
+      return summarizeWithGemini(bankName, currency, statement, attempt + 1);
     }
     throw new Error(`Gemini API HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 300) : ''}`);
   }
@@ -171,7 +171,11 @@ async function refreshCentralBankAnalysis(data) {
   let ok = 0, failed = 0;
   const failures = [];
 
+  let bankIndex = 0;
   for (const [ccy, bank] of Object.entries(CENTRAL_BANK_FEEDS)) {
+    if (bankIndex > 0) await new Promise(r => setTimeout(r, 4000)); // spread calls out
+    bankIndex++;
+
     if (!bank.url) {
       failures.push(`${ccy} (no known feed — needs manual URL)`);
       continue;
