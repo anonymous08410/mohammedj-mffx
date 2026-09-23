@@ -135,10 +135,15 @@ async function refreshLiveData(data) {
   const failures = [];
 
   // --- CPI + unemployment per G10 currency (FRED) ---
+  // Australia and NZ report CPI quarterly, not monthly — everyone else uses
+  // the monthly series (M659N); these two need the quarterly one (Q659N).
+  const QUARTERLY_CPI_COUNTRIES = new Set(['AU', 'NZ']);
+
   for (const [ccy, oecdCode] of Object.entries(CURRENCY_TO_OECD)) {
     if (!data.g10Data[ccy]) continue;
 
-    const cpi = await fetchFredLatest(`CPALTT01${oecdCode}M659N`);
+    const cpiFreq = QUARTERLY_CPI_COUNTRIES.has(oecdCode) ? 'Q' : 'M';
+    const cpi = await fetchFredLatest(`CPALTT01${oecdCode}${cpiFreq}659N`);
     if (cpi.value !== null) {
       data.g10Data[ccy].inflation = cpi.value;
       data.g10Data[ccy].macroData.cpi_yoy = cpi.value;
