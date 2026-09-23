@@ -539,7 +539,7 @@
         });
 
         // === DASHBOARD CODE STARTS HERE ===
-        const API_URL = 'https://macro-fundamentals-2.onrender.com'; // Still here for reference but not used
+        const API_URL = 'https://macro-fundamentals-2.onrender.com';
         let allData = {
             topStats: {
                 dot: { value: 3.5 },
@@ -573,23 +573,69 @@
         async function initDashboard() {
             try {
                 console.log('Initializing dashboard...');
-                // Use hardcoded data instead of API
-                allData = getHardcodedData();
-                console.log('Data loaded, allData keys:', Object.keys(allData));
-                console.log('topStats:', allData.topStats);
-                
-                // Force render
+                const fallback = getHardcodedData();
+                allData = fallback; // render immediately so the page is never blank
+
                 if (allData && allData.topStats) {
                     renderAllTabs();
-                    console.log('Dashboard rendered successfully!');
-                } else {
-                    console.error('Missing data:', { allData, topStats: allData ? allData.topStats : 'no allData' });
+                    console.log('Dashboard rendered with fallback data.');
+                }
+
+                // Fetch live data in the background and overlay it once it arrives.
+                // Render's free tier can take 30-60s to wake from a cold start, so
+                // this must never block the initial render.
+                try {
+                    const res = await fetch(`${API_URL}/api/dashboard`);
+                    if (res.ok) {
+                        const live = await res.json();
+                        allData = mergeLiveData(fallback, live);
+                        console.log('Live data merged in:', allData.lastLiveUpdate);
+                        renderAllTabs();
+                    } else {
+                        console.warn('Live data fetch failed with status', res.status, '— staying on fallback data.');
+                    }
+                } catch (fetchErr) {
+                    console.warn('Could not reach live backend — staying on fallback data:', fetchErr.message);
                 }
             } catch (e) {
                 console.error('Dashboard initialization error:', e);
                 console.error('Stack:', e.stack);
                 alert('Error loading dashboard: ' + e.message);
             }
+        }
+
+        // Overlays live backend fields onto the hardcoded baseline. Deliberately
+        // additive/partial: only overwrites fields the backend actually provides
+        // (rate, inflation, CPI, unemployment, GDP growth, gold, FX rates,
+        // central bank analysis). Everything else (yield curves, COT, credit
+        // spreads, capital flows, risk sentiment, surprises) stays as the
+        // baseline placeholder until those get their own live sources.
+        function mergeLiveData(fallback, live) {
+            const merged = JSON.parse(JSON.stringify(fallback)); // deep clone, don't mutate the fallback
+
+            if (live.commodities && live.commodities.gold && typeof live.commodities.gold.price === 'number') {
+                merged.topStats.gold = { value: live.commodities.gold.price };
+            }
+
+            if (live.g10Data) {
+                for (const [ccy, liveCcy] of Object.entries(live.g10Data)) {
+                    if (!merged.g10Data[ccy]) continue;
+                    if (typeof liveCcy.rate === 'number') merged.g10Data[ccy].rate = liveCcy.rate;
+                    if (typeof liveCcy.inflation === 'number') merged.g10Data[ccy].inflation = liveCcy.inflation;
+                    if (liveCcy.macroData) {
+                        merged.g10Data[ccy].macroData = merged.g10Data[ccy].macroData || {};
+                        if (typeof liveCcy.macroData.cpi_yoy === 'number') merged.g10Data[ccy].macroData.cpi_yoy = liveCcy.macroData.cpi_yoy;
+                        if (typeof liveCcy.macroData.unemployment === 'number') merged.g10Data[ccy].macroData.unemployment = liveCcy.macroData.unemployment;
+                        if (typeof liveCcy.macroData.gdpGrowth === 'number') merged.g10Data[ccy].macroData.gdpGrowth = liveCcy.macroData.gdpGrowth;
+                    }
+                }
+            }
+
+            if (live.fxRates) merged.fxRates = live.fxRates;
+            if (live.centralBankAnalysis) merged.centralBankAnalysis = live.centralBankAnalysis;
+            merged.lastLiveUpdate = live.lastLiveUpdate || null;
+
+            return merged;
         }
 
         function getHardcodedData() {
