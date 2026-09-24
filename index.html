@@ -978,7 +978,7 @@
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; height: calc(100% - 40px);">
                     <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
                         <div style="font-size: 11px; color: var(--accent-purple); font-weight: 700;">⭐ ${dashboardCurrencyLeft} - ${getMacroScore(currLeft)}/10</div>
-                        <div class="card"><div class="card-title">Policy Rate</div><div class="card-value">${currLeft.rate}%</div></div>
+                        <div class="card" style="cursor: pointer;" onclick="openCentralBankModal('${dashboardCurrencyLeft}')" title="Click for central bank statement analysis"><div class="card-title">Policy Rate</div><div class="card-value">${currLeft.rate}%</div></div>
                         <div class="card"><div class="card-title">Inflation</div><div class="card-value">${currLeft.inflation}%</div></div>
                         <div class="card"><div class="card-title">Real 10Y</div><div class="card-value">${currLeft.realYields.rea_10y}%</div></div>
                     </div>
@@ -999,7 +999,7 @@
 
                     <div style="display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
                         <div style="font-size: 11px; color: var(--accent-purple); font-weight: 700;">⭐ ${dashboardCurrencyRight} - ${getMacroScore(currRight)}/10</div>
-                        <div class="card"><div class="card-title">Policy Rate</div><div class="card-value">${currRight.rate}%</div></div>
+                        <div class="card" style="cursor: pointer;" onclick="openCentralBankModal('${dashboardCurrencyRight}')" title="Click for central bank statement analysis"><div class="card-title">Policy Rate</div><div class="card-value">${currRight.rate}%</div></div>
                         <div class="card"><div class="card-title">Inflation</div><div class="card-value">${currRight.inflation}%</div></div>
                         <div class="card"><div class="card-title">Real 10Y</div><div class="card-value">${currRight.realYields.rea_10y}%</div></div>
                     </div>
@@ -1765,5 +1765,5 @@
             }
         }
     </script>
-</body>
-</html>
+    <div id="cbModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) closeCentralBankModal()">
+        <div style="background:var(--card); border:1
