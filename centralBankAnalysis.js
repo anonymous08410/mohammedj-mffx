@@ -30,7 +30,7 @@ const CENTRAL_BANK_FEEDS = {
   AUD: { name: 'Reserve Bank of Australia', url: 'https://www.rba.gov.au/rss/rss-cb-media-releases.xml', confidence: 'unverified', keywords: ['cash rate', 'monetary policy'] },
   JPY: { name: 'Bank of Japan', url: null, confidence: 'none', keywords: [] },
   NZD: { name: 'Reserve Bank of New Zealand', url: null, confidence: 'none', keywords: [] },
-  CHF: { name: 'Swiss National Bank', url: null, confidence: 'none', keywords: [] },
+  CHF: { name: 'Swiss National Bank', url: 'https://www.snb.ch/public/rss/en/news', confidence: 'confirmed', keywords: ['monetary policy', 'policy rate', 'interest rate'] },
   SEK: { name: 'Sveriges Riksbank', url: null, confidence: 'none', keywords: [] },
   NOK: { name: 'Norges Bank', url: null, confidence: 'none', keywords: [] }
 };
