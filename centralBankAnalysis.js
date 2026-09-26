@@ -141,8 +141,8 @@ ${statement.text}`;
 
   if (!res.ok) {
     const bodyText = await res.text().catch(() => '');
-    if (res.status === 503 && attempt < 2) {
-      await new Promise(r => setTimeout(r, 10000 * (attempt + 1))); // 10s, then 20s
+    if (res.status === 503 && attempt < 4) {
+      await new Promise(r => setTimeout(r, 15000 * (attempt + 1))); // 15s, 30s, 45s, 60s
       return summarizeWithGemini(bankName, currency, statement, attempt + 1);
     }
     throw new Error(`Gemini API HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 300) : ''}`);
