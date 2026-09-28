@@ -570,6 +570,32 @@
         let dashboardCurrencyLeft = 'USD';
         let dashboardCurrencyRight = 'EUR';
 
+        // Small status pill (bottom-left) so it's always clear whether the numbers are live.
+        function setLiveStatus(text, color) {
+            let el = document.getElementById('liveStatus');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'liveStatus';
+                el.style.cssText = 'position:fixed; left:10px; bottom:10px; z-index:900; padding:6px 12px; border-radius:14px; font-size:11px; background:var(--card); border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,0.15); max-width:80vw;';
+                document.body.appendChild(el);
+            }
+            el.style.display = text ? 'block' : 'none';
+            el.style.color = color || 'var(--text-secondary)';
+            el.textContent = text || '';
+        }
+
+        async function fetchLiveDashboard() {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 60000); // a sleeping Render server can take ~1 min to answer
+            try {
+                const res = await fetch(`${API_URL}/api/dashboard`, { signal: ctrl.signal });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return await res.json();
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         async function initDashboard() {
             try {
                 console.log('Initializing dashboard...');
@@ -581,22 +607,29 @@
                     console.log('Dashboard rendered with fallback data.');
                 }
 
-                // Fetch live data in the background and overlay it once it arrives.
-                // Render's free tier can take 30-60s to wake from a cold start, so
-                // this must never block the initial render.
-                try {
-                    const res = await fetch(`${API_URL}/api/dashboard`);
-                    if (res.ok) {
-                        const live = await res.json();
-                        allData = mergeLiveData(fallback, live);
-                        console.log('Live data merged in:', allData.lastLiveUpdate);
-                        renderAllTabs();
-                    } else {
-                        console.warn('Live data fetch failed with status', res.status, '— staying on fallback data.');
+                // Keep asking the backend until it has live data. On Render's free tier the
+                // server sleeps when idle; after waking it serves placeholder numbers until
+                // its first data refresh finishes (lastLiveUpdate is only set after that).
+                setLiveStatus('Connecting to data server... showing placeholder values for now');
+                const MAX_TRIES = 12;
+                for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+                    try {
+                        const live = await fetchLiveDashboard();
+                        if (live.lastLiveUpdate) {
+                            allData = mergeLiveData(fallback, live);
+                            console.log('Live data merged in:', allData.lastLiveUpdate);
+                            renderAllTabs();
+                            setLiveStatus('● Live data loaded', 'var(--accent-up)');
+                            setTimeout(() => setLiveStatus(''), 6000);
+                            return;
+                        }
+                        setLiveStatus('Data server is starting up... showing placeholder values for now');
+                    } catch (fetchErr) {
+                        console.warn('Live data attempt ' + attempt + ' failed:', fetchErr.message);
                     }
-                } catch (fetchErr) {
-                    console.warn('Could not reach live backend — staying on fallback data:', fetchErr.message);
+                    await new Promise(r => setTimeout(r, 8000));
                 }
+                setLiveStatus('Data server not responding. Numbers shown are placeholders. Tap Reload to retry.', 'var(--accent-down)');
             } catch (e) {
                 console.error('Dashboard initialization error:', e);
                 console.error('Stack:', e.stack);
