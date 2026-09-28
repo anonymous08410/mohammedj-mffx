@@ -1766,4 +1766,77 @@
         }
     </script>
     <div id="cbModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) closeCentralBankModal()">
-        <div style="background:var(--card); border:1
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:8px; max-width:700px; width:100%; max-height:85vh; overflow-y:auto; padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                <div id="cbModalTitle" style="font-size:18px; font-weight:700; color:var(--text-primary);"></div>
+                <div style="cursor:pointer; font-size:20px; color:var(--text-secondary);" onclick="closeCentralBankModal()">✕</div>
+            </div>
+            <div id="cbModalBody" style="font-size:13px; color:var(--text-secondary); line-height:1.6;"></div>
+        </div>
+    </div>
+
+    <script>
+        function closeCentralBankModal() {
+            document.getElementById('cbModalOverlay').style.display = 'none';
+        }
+
+        async function openCentralBankModal(currency) {
+            const overlay = document.getElementById('cbModalOverlay');
+            const titleEl = document.getElementById('cbModalTitle');
+            const bodyEl = document.getElementById('cbModalBody');
+            const rate = allData.g10Data[currency] ? allData.g10Data[currency].rate : null;
+
+            titleEl.textContent = `${currency} Central Bank${rate !== null ? ' — ' + rate + '%' : ''}`;
+            bodyEl.innerHTML = '<div style="text-align:center; padding:30px;">Loading statement analysis...</div>';
+            overlay.style.display = 'flex';
+
+            try {
+                const res = await fetch(`${API_URL}/api/central-bank?currency=${currency}`);
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    bodyEl.innerHTML = `<div style="padding:20px; text-align:center;">
+                        <div style="margin-bottom:8px;">No statement analysis available for ${currency} yet.</div>
+                        <div style="font-size:11px; color:var(--text-secondary);">${err.note || "This bank's statement feed may not be configured, or the daily refresh hasn't run yet."}</div>
+                    </div>`;
+                    return;
+                }
+                const a = await res.json();
+                const views = a.views || {};
+                const viewBlock = (label, text) => text ? `
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:11px; font-weight:700; color:var(--accent-purple); text-transform:uppercase; margin-bottom:4px;">${label}</div>
+                        <div>${text}</div>
+                    </div>` : '';
+
+                bodyEl.innerHTML = `
+                    <div style="display:flex; gap:16px; margin-bottom:16px; font-size:11px; color:var(--text-secondary);">
+                        ${a.conviction ? `<div><strong>Conviction:</strong> ${a.conviction}</div>` : ''}
+                        ${a.vote_split ? `<div><strong>Vote Split:</strong> ${a.vote_split}</div>` : ''}
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-size:11px; font-weight:700; color:var(--accent-purple); text-transform:uppercase; margin-bottom:4px;">The Read</div>
+                        <div>${a.the_read || 'Not available'}</div>
+                    </div>
+                    ${a.what_changed ? `<div style="margin-bottom:16px;">
+                        <div style="font-size:11px; font-weight:700; color:var(--accent-purple); text-transform:uppercase; margin-bottom:4px;">What Changed Since Last Meeting</div>
+                        <div>${a.what_changed}</div>
+                    </div>` : ''}
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                        ${viewBlock('Inflation', views.inflation)}
+                        ${viewBlock('Growth', views.growth)}
+                        ${viewBlock('Labour', views.labour)}
+                        ${viewBlock('Risk', views.risk)}
+                    </div>
+                    <div style="border-top:1px solid var(--border); padding-top:12px; font-size:11px; color:var(--text-secondary);">
+                        Source: ${a.source_link ? `<a href="${a.source_link}" target="_blank" style="color:var(--accent-purple);">${a.source_title || 'Official statement'}</a>` : (a.source_title || 'Unknown')}
+                        ${a.source_date ? ` · ${a.source_date}` : ''}
+                        ${a.generated_at ? `<br>Analysis generated: ${new Date(a.generated_at).toLocaleString()}` : ''}
+                    </div>
+                `;
+            } catch (e) {
+                bodyEl.innerHTML = `<div style="padding:20px; text-align:center;">Could not reach the backend. It may be waking up from sleep — try again in a moment.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
