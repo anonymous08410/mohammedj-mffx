@@ -25,11 +25,11 @@ if (!GEMINI_API_KEY) console.warn('[centralBankAnalysis] GEMINI_API_KEY not set 
 const CENTRAL_BANK_FEEDS = {
   USD: { name: 'Federal Reserve', url: 'https://www.federalreserve.gov/feeds/press_monetary.xml', confidence: 'confirmed', keywords: [] },
   EUR: { name: 'European Central Bank', url: 'https://www.ecb.europa.eu/rss/press.xml', confidence: 'confirmed', keywords: ['monetary policy', 'governing council', 'interest rate'] },
-  GBP: { name: 'Bank of England', url: 'https://www.bankofengland.co.uk/rss/news', confidence: 'unverified', keywords: ['bank rate', 'mpc', 'monetary policy'] },
+  GBP: { name: 'Bank of England', url: 'https://www.bankofengland.co.uk/rss/news', confidence: 'unverified', keywords: ['bank rate', 'monetary policy summary', 'monetary policy report'] },
   CAD: { name: 'Bank of Canada', url: 'https://www.bankofcanada.ca/content_type/press-releases/feed/', confidence: 'unverified', keywords: ['interest rate', 'policy rate'] },
   AUD: { name: 'Reserve Bank of Australia', url: 'https://www.rba.gov.au/rss/rss-cb-media-releases.xml', confidence: 'unverified', keywords: ['cash rate', 'monetary policy'] },
   JPY: { name: 'Bank of Japan', url: null, confidence: 'none', keywords: [] },
-  NZD: { name: 'Reserve Bank of New Zealand', url: null, confidence: 'none', keywords: [] },
+  NZD: { name: 'Reserve Bank of New Zealand', url: 'https://www.rbnz.govt.nz/feeds/news', confidence: 'confirmed', keywords: ['official cash rate', 'monetary policy statement', 'monetary policy review'] },
   CHF: { name: 'Swiss National Bank', url: 'https://www.snb.ch/public/rss/en/news', confidence: 'confirmed', keywords: ['monetary policy', 'policy rate', 'interest rate'] },
   SEK: { name: 'Sveriges Riksbank', url: null, confidence: 'none', keywords: [] },
   NOK: { name: 'Norges Bank', url: null, confidence: 'none', keywords: [] }
@@ -78,15 +78,22 @@ function extractLatestRssItem(xml, preferKeywords = []) {
   // the first item whose title actually matches what we're looking for
   // rather than blindly taking whatever happens to be newest.
   if (preferKeywords.length > 0) {
+    // Titles that mention the right words but are administrative, not decisions
+    // (e.g. "Monetary Policy Committee dates for 2027")
+    const ADMIN_TITLE = /\b(dates|schedule|calendar|timetable|consultation|appoints?|appointment|tender|auction)\b/i;
     for (const raw of items) {
       const parsed = parseItem(raw);
-      if (parsed.title && preferKeywords.some(kw => parsed.title.toLowerCase().includes(kw))) {
+      if (!parsed.title || ADMIN_TITLE.test(parsed.title)) continue;
+      if (preferKeywords.some(kw => parsed.title.toLowerCase().includes(kw))) {
         return parsed;
       }
     }
+    // Nothing relevant in this feed right now. Don't summarize an unrelated
+    // item (a speech, a bond notice...) as if it were the policy statement.
+    return null;
   }
 
-  // No keyword match (or none requested) — fall back to the newest item
+  // No keywords requested (feed is already policy-only) — use the newest item
   return parseItem(items[0]);
 }
 
@@ -95,7 +102,7 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
   if (!res.ok) throw new Error(`Feed HTTP ${res.status}`);
   const xml = await res.text();
   const item = extractLatestRssItem(xml, preferKeywords);
-  if (!item || !item.link) throw new Error('No item found in feed');
+  if (!item || !item.link) throw new Error('No monetary-policy item found in the feed right now');
 
   // Try to fetch the full press release page for more text than the RSS snippet
   let fullText = item.description;
