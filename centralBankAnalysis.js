@@ -70,7 +70,7 @@ function extractLatestRssItem(xml, preferKeywords = []) {
       title: title ? stripHtml(title.replace('<![CDATA[', '').replace(']]>', '')) : null,
       link: link ? link.replace('<![CDATA[', '').replace(']]>', '').trim() : null,
       description: description ? stripHtml(description.replace('<![CDATA[', '').replace(']]>', '')) : '',
-      pubDate: pubDate || null
+      pubDate: pubDate ? pubDate.replace('<![CDATA[', '').replace(']]>', '').trim() : null
     };
   }
 
