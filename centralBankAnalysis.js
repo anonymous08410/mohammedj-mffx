@@ -47,6 +47,16 @@ function stripHtml(html) {
     .trim();
 }
 
+// Removes page chrome (menus, headers, footers) and prefers the main article
+// body, so the text sent for analysis is the statement itself rather than
+// site navigation. Falls back to the whole page if no article/main is found.
+function extractReadableText(html) {
+  let cleaned = html.replace(/<(nav|header|footer|aside|form|noscript|svg|iframe)\b[\s\S]*?<\/\1>/gi, ' ');
+  const main = cleaned.match(/<article\b[\s\S]*?<\/article>/i) || cleaned.match(/<main\b[\s\S]*?<\/main>/i);
+  if (main && stripHtml(main[0]).length > 1500) cleaned = main[0];
+  return stripHtml(cleaned);
+}
+
 function extractLatestRssItem(xml, preferKeywords = []) {
   const items = xml.match(/<item[\s\S]*?<\/item>/gi) || [];
   if (items.length === 0) return null;
@@ -93,9 +103,9 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
     const pageRes = await fetch(item.link);
     if (pageRes.ok) {
       const html = await pageRes.text();
-      const bodyText = stripHtml(html);
+      const bodyText = extractReadableText(html);
       // Only use it if it's substantially longer than the RSS snippet (i.e. actually got the article)
-      if (bodyText.length > fullText.length * 2) fullText = bodyText.slice(0, 8000);
+      if (bodyText.length > fullText.length * 2) fullText = bodyText.slice(0, 20000);
     }
   } catch (e) {
     // Fall back to RSS description text — not fatal
@@ -106,6 +116,8 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
 
 async function summarizeWithGemini(bankName, currency, statement, attempt = 0) {
   const prompt = `You are analyzing an official central bank statement for an FX trading dashboard. Below is the real text of the latest statement from the ${bankName} (${currency}), published ${statement.pubDate || 'recently'}, titled "${statement.title}".
+
+The text below was scraped from a web page, so it may include menu or footer text; ignore that and analyze only the statement itself. If the statement text itself is genuinely incomplete, say so plainly rather than guessing.
 
 Using ONLY the information in this statement — do not invent facts, numbers, or votes not present in the text — produce a JSON object with this exact shape. Keep every field concise (1-2 short sentences max, never more):
 
