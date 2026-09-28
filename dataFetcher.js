@@ -50,6 +50,13 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Records when a field was last successfully refreshed from a live source, so
+// the page can tell real readings apart from placeholder numbers.
+function markLive(data, key) {
+  data.liveFields = data.liveFields || {};
+  data.liveFields[key] = new Date().toISOString();
+}
+
 async function fetchFredLatest(seriesId) {
   if (!FRED_API_KEY) return { value: null, error: 'FRED_API_KEY not set' };
   const url = `${FRED_BASE}?series_id=${seriesId}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`;
@@ -141,6 +148,7 @@ async function refreshLiveData(data) {
     if (cpi.value !== null) {
       data.g10Data[ccy].inflation = cpi.value;
       data.g10Data[ccy].macroData.cpi_yoy = cpi.value;
+      markLive(data, `${ccy}.inflation`);
       ok++;
     } else {
       failed++; failures.push(`${ccy} CPI: ${cpi.error}`);
@@ -149,6 +157,7 @@ async function refreshLiveData(data) {
     const unemployment = await fetchFredLatest(`LRHUTTTT${oecdCode}Q156S`);
     if (unemployment.value !== null) {
       data.g10Data[ccy].macroData.unemployment = unemployment.value;
+      markLive(data, `${ccy}.unemployment`);
       ok++;
     } else {
       failed++; failures.push(`${ccy} unemployment: ${unemployment.error}`);
@@ -160,6 +169,7 @@ async function refreshLiveData(data) {
   const usGdp = await fetchFredLatest('A191RL1Q225SBEA');
   if (usGdp.value !== null) {
     data.g10Data.USD.macroData.gdpGrowth = usGdp.value;
+    markLive(data, 'USD.gdpGrowth');
     ok++;
   } else {
     failed++; failures.push(`USD GDP growth: ${usGdp.error}`);
