@@ -1662,15 +1662,21 @@
             html += '<tr><th style="padding: 12px; text-align: left; font-weight: 700; color: var(--accent-purple);">Rank</th><th style="text-align: left; font-weight: 700; color: var(--accent-purple);">Currency</th><th style="text-align: left; font-weight: 700; color: var(--accent-purple);">Strength</th><th style="text-align: left; font-weight: 700; color: var(--accent-purple);">Key Drivers</th></tr>';
             html += '</thead><tbody>';
             
+            const g10Codes = allData.g10Data ? Object.keys(allData.g10Data) : [];
             for (const c of currencies) {
+                const isCurrency = g10Codes.includes(c.currency);
+                const rowClick = isCurrency
+                    ? "openCentralBankModal('" + c.currency + "')"
+                    : "openCommodityNote('" + c.currency + "')";
                 const strengthBar = Math.round(c.strength);
-                html += '<tr style="border-bottom: 1px solid var(--border);">';
+                html += '<tr style="border-bottom: 1px solid var(--border); cursor:pointer;" onclick="' + rowClick + '" title="Tap for what the data actually shows">';
                 html += '<td style="padding: 12px; font-weight: 700;">#' + c.rank + '</td>';
-                html += '<td style="padding: 12px;"><span style="font-size: 18px;">' + c.flag + '</span> ' + c.currency + '</td>';
+                html += '<td style="padding: 12px;"><span style="font-size: 18px;">' + c.flag + '</span> ' + c.currency + ' ⓘ</td>';
                 html += '<td style="padding: 12px;"><div style="background: rgba(99, 102, 241, 0.1); border-radius: 3px; overflow: hidden; height: 20px;"><div style="background: var(--accent-purple); width: ' + strengthBar + '%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; color: white; font-size: 10px; font-weight: 700;">' + strengthBar + '%</div></div></td>';
                 html += '<td style="padding: 12px; font-size: 12px; color: var(--text-secondary);">' + c.drivers + '</td>';
                 html += '</tr>';
             }
+            html += '<tr><td colspan="4" style="padding: 12px; font-size: 11px; color: var(--text-secondary);">Rank, Strength % and Key Drivers on this table are illustrative placeholders, not computed from live data yet. Tap a currency to see what\'s actually live for it (policy rate, inflation, growth, unemployment, and its central bank\'s real statement).</td></tr>';
             
             html += '</tbody></table>';
             document.getElementById('currencyStrength').innerHTML = html;
@@ -1853,6 +1859,15 @@
             document.getElementById('cbModalTitle').textContent = title;
             document.getElementById('cbModalBody').innerHTML = html;
             document.getElementById('cbModalOverlay').style.display = 'flex';
+        }
+
+        function openCommodityNote(name) {
+            let priceLine = '';
+            if (name === 'Gold' && allData.topStats && allData.topStats.gold) {
+                const isLive = allData.liveFields && allData.liveFields['USD.inflation']; // gold fetch runs alongside FRED, same cycle
+                priceLine = cbSection('Price', '$' + allData.topStats.gold.value + (isLive ? ' (live, Twelve Data)' : ' (placeholder)'));
+            }
+            cbOpen(name, priceLine + cbSection('About this', 'There is no live "why it moved" analysis for ' + cbEsc(name) + ' yet — the driver text on the Strength table is a placeholder, not generated from real data. The price shown above (when live) comes from Twelve Data; nothing currently explains its moves.'));
         }
 
         function closeCentralBankModal() {
