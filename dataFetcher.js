@@ -1,244 +1,218 @@
-// centralBankAnalysis.js
+// dataFetcher.js
 //
-// For each G10 central bank: pulls the latest real statement/press-release
-// text from that bank's own official RSS feed, then asks Google Gemini (free
-// tier) to turn it
-// into the structured analysis your dashboard displays (The Read, what
-// changed since last meeting, vote split, per-category commentary).
+// Replaces the static numbers in server.js's `data` object with live values,
+// refreshed on a schedule. Mutates the `data` object in place so server.js
+// doesn't need to change how it serves /api/dashboard.
 //
-// IMPORTANT: this only ever summarizes text actually fetched from the
-// central bank's own site. If a feed fails or returns nothing, that bank's
-// analysis is simply left unset (or kept at its last good value) — nothing
-// here fabricates a statement.
+// Sources:
+//   - FRED (api.stlouisfed.org)     -> CPI YoY + unemployment, per G10 currency
+//   - Frankfurter (frankfurter.app) -> FX pair rates (no key needed)
+//   - Twelve Data (twelvedata.com)  -> Gold, Silver, Oil, Copper, Nat Gas
 //
-// Runs once/day (not every 30 min like dataFetcher) since central bank
-// statements only change around meeting dates, not continuously.
+// Deliberately NOT automated: central bank policy rates (data.centralBanks).
+// They only change around ~8 meetings/year per bank and FRED doesn't have a
+// single reliable, consistently-named series for every G10 central bank's
+// current policy rate. Safer to keep updating data.centralBanks by hand after
+// each meeting than to silently trust a shaky auto-feed on something this
+// important to a trade thesis.
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) console.warn('[centralBankAnalysis] GEMINI_API_KEY not set — statement analysis will not run.');
+const fs = require('fs');
+const path = require('path');
 
-// Confidence-labeled feed map. "confirmed" feeds follow a verified URL
-// pattern from that bank's own feed index. "unverified" are a best guess —
-// they may 404; check server logs after first deploy and swap in a working
-// URL if one fails. "none" means no reliable public feed was found — that
-// bank's analysis stays unavailable until you supply one.
-const CENTRAL_BANK_FEEDS = {
-  USD: { name: 'Federal Reserve', url: 'https://www.federalreserve.gov/feeds/press_monetary.xml', confidence: 'confirmed', keywords: [] },
-  EUR: { name: 'European Central Bank', url: 'https://www.ecb.europa.eu/rss/press.xml', confidence: 'confirmed', keywords: ['monetary policy', 'governing council', 'interest rate'] },
-  GBP: { name: 'Bank of England', url: 'https://www.bankofengland.co.uk/rss/news', confidence: 'unverified', keywords: ['bank rate', 'monetary policy summary', 'monetary policy report'] },
-  CAD: { name: 'Bank of Canada', url: 'https://www.bankofcanada.ca/content_type/press-releases/feed/', confidence: 'unverified', keywords: ['interest rate', 'policy rate'] },
-  AUD: { name: 'Reserve Bank of Australia', url: 'https://www.rba.gov.au/rss/rss-cb-media-releases.xml', confidence: 'unverified', keywords: ['cash rate', 'monetary policy'] },
-  JPY: { name: 'Bank of Japan', url: null, confidence: 'none', keywords: [] },
-  NZD: { name: 'Reserve Bank of New Zealand', url: 'https://www.rbnz.govt.nz/feeds/news', confidence: 'confirmed', keywords: ['official cash rate', 'monetary policy statement', 'monetary policy review'] },
-  CHF: { name: 'Swiss National Bank', url: 'https://www.snb.ch/public/rss/en/news', confidence: 'confirmed', keywords: ['monetary policy', 'policy rate', 'interest rate'] },
-  SEK: { name: 'Sveriges Riksbank', url: null, confidence: 'none', keywords: [] },
-  NOK: { name: 'Norges Bank', url: null, confidence: 'none', keywords: [] }
+const FRED_API_KEY = process.env.FRED_API_KEY;
+const TWELVEDATA_API_KEY = process.env.TWELVEDATA_API_KEY;
+
+if (!FRED_API_KEY) console.warn('[dataFetcher] FRED_API_KEY not set — CPI/unemployment will not refresh.');
+if (!TWELVEDATA_API_KEY) console.warn('[dataFetcher] TWELVEDATA_API_KEY not set — commodities will not refresh.');
+
+const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
+
+// OECD country codes behind FRED's CPALTT01{CC}M659N (CPI YoY) and
+// LRHUTTTT{CC}M156S (harmonized unemployment rate) series.
+// EUR uses Germany (DEU) as a proxy — FRED's true euro-area HICP series has a
+// different ID (CP0000EZ19M086NEST) if you'd rather switch to that later.
+const CURRENCY_TO_OECD = {
+  USD: 'US', EUR: 'DE', GBP: 'GB', JPY: 'JP', CAD: 'CA',
+  AUD: 'AU', NZD: 'NZ', CHF: 'CH', SEK: 'SE', NOK: 'NO'
 };
 
-// fetch() has no built-in timeout, so a single hung request (a slow feed, a
-// page that never responds) can freeze this whole daily refresh forever,
-// silently, since everything below awaits one bank at a time. Every network
-// call here goes through this instead of bare fetch().
-async function fetchWithTimeout(url, options, timeoutMs) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+const COMMODITY_SYMBOLS = {
+  gold: 'XAU/USD'
+  // silver, platinum, palladium, oil (WTI/Brent), nat gas, copper, wheat, corn
+  // all 404 on the free Twelve Data plan — only gold is included in the free
+  // tier's commodity access. Add them back here if the plan is ever upgraded.
+};
+
+const SNAPSHOT_DIR = path.join(__dirname, 'data-snapshots');
+if (!fs.existsSync(SNAPSHOT_DIR)) fs.mkdirSync(SNAPSHOT_DIR);
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Records when a field was last successfully refreshed from a live source, so
+// the page can tell real readings apart from placeholder numbers.
+function markLive(data, key) {
+  data.liveFields = data.liveFields || {};
+  data.liveFields[key] = new Date().toISOString();
+}
+
+async function fetchFredLatest(seriesId) {
+  if (!FRED_API_KEY) return { value: null, error: 'FRED_API_KEY not set' };
+  const url = `${FRED_BASE}?series_id=${seriesId}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`;
   try {
-    return await fetch(url, { ...options, signal: ctrl.signal });
-  } finally {
-    clearTimeout(timer);
+    const res = await fetch(url);
+    if (!res.ok) {
+      // FRED puts the real reason in the response body even on 4xx — surface it
+      const bodyText = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 200) : ''}`);
+    }
+    const json = await res.json();
+    const obs = json.observations && json.observations[0];
+    if (!obs || obs.value === '.') return { value: null, error: 'No observation data returned' };
+    return { value: parseFloat(obs.value), error: null };
+  } catch (err) {
+    console.error(`[dataFetcher] FRED ${seriesId} failed:`, err.message);
+    return { value: null, error: err.message };
   }
 }
 
-function stripHtml(html) {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&[a-z]+;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+async function fetchFrankfurterRates(base = 'USD') {
+  try {
+    const res = await fetch(`https://api.frankfurter.app/latest?from=${base}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return { value: json.rates || null, error: json.rates ? null : 'No rates in response' };
+  } catch (err) {
+    console.error('[dataFetcher] Frankfurter fetch failed:', err.message);
+    return { value: null, error: err.message };
+  }
 }
 
-// Removes page chrome (menus, headers, footers) and prefers the main article
-// body, so the text sent for analysis is the statement itself rather than
-// site navigation. Falls back to the whole page if no article/main is found.
-function extractReadableText(html) {
-  let cleaned = html.replace(/<(nav|header|footer|aside|form|noscript|svg|iframe)\b[\s\S]*?<\/\1>/gi, ' ');
-  const main = cleaned.match(/<article\b[\s\S]*?<\/article>/i) || cleaned.match(/<main\b[\s\S]*?<\/main>/i);
-  if (main && stripHtml(main[0]).length > 1500) cleaned = main[0];
-  return stripHtml(cleaned);
+async function fetchTwelveDataPrice(symbol) {
+  if (!TWELVEDATA_API_KEY) return { value: null, error: 'TWELVEDATA_API_KEY not set' };
+  try {
+    const res = await fetch(`https://api.twelvedata.com/price?symbol=${encodeURIComponent(symbol)}&apikey=${TWELVEDATA_API_KEY}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.status === 'error' || !json.price) {
+      const msg = json.message || 'no price in response';
+      console.error(`[dataFetcher] TwelveData ${symbol}:`, msg);
+      return { value: null, error: msg };
+    }
+    return { value: parseFloat(json.price), error: null };
+  } catch (err) {
+    console.error(`[dataFetcher] TwelveData ${symbol} failed:`, err.message);
+    return { value: null, error: err.message };
+  }
 }
 
-function extractLatestRssItem(xml, preferKeywords = []) {
-  const items = xml.match(/<item[\s\S]*?<\/item>/gi) || [];
-  if (items.length === 0) return null;
+function saveDailySnapshot(data) {
+  const today = new Date().toISOString().slice(0, 10);
+  const file = path.join(SNAPSHOT_DIR, `${today}.json`);
+  if (fs.existsSync(file)) return; // already have today's snapshot
 
-  function parseItem(item) {
-    const title = (item.match(/<title>([\s\S]*?)<\/title>/i) || [])[1];
-    const link = (item.match(/<link>([\s\S]*?)<\/link>/i) || [])[1];
-    const description = (item.match(/<description>([\s\S]*?)<\/description>/i) || [])[1];
-    const pubDate = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i) || [])[1];
-    return {
-      title: title ? stripHtml(title.replace('<![CDATA[', '').replace(']]>', '')) : null,
-      link: link ? link.replace('<![CDATA[', '').replace(']]>', '').trim() : null,
-      description: description ? stripHtml(description.replace('<![CDATA[', '').replace(']]>', '')) : '',
-      pubDate: pubDate ? pubDate.replace('<![CDATA[', '').replace(']]>', '').trim() : null
+  const snapshot = {};
+  for (const [ccy, d] of Object.entries(data.g10Data || {})) {
+    snapshot[ccy] = {
+      rate: d.rate,
+      cpi_yoy: d.macroData ? d.macroData.cpi_yoy : undefined,
+      unemployment: d.macroData ? d.macroData.unemployment : undefined,
+      gdpGrowth: d.macroData ? d.macroData.gdpGrowth : undefined
     };
   }
-
-  // If the feed mixes content types (speeches, general press, etc.), prefer
-  // the first item whose title actually matches what we're looking for
-  // rather than blindly taking whatever happens to be newest.
-  if (preferKeywords.length > 0) {
-    // Titles that mention the right words but are administrative, not decisions
-    // (e.g. "Monetary Policy Committee dates for 2027")
-    const ADMIN_TITLE = /\b(dates|schedule|calendar|timetable|consultation|appoints?|appointment|tender|auction)\b/i;
-    for (const raw of items) {
-      const parsed = parseItem(raw);
-      if (!parsed.title || ADMIN_TITLE.test(parsed.title)) continue;
-      if (preferKeywords.some(kw => parsed.title.toLowerCase().includes(kw))) {
-        return parsed;
-      }
-    }
-    // Nothing relevant in this feed right now. Don't summarize an unrelated
-    // item (a speech, a bond notice...) as if it were the policy statement.
-    return null;
-  }
-
-  // No keywords requested (feed is already policy-only) — use the newest item
-  return parseItem(items[0]);
-}
-
-async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
-  const res = await fetchWithTimeout(feedUrl, {}, 15000);
-  if (!res.ok) throw new Error(`Feed HTTP ${res.status}`);
-  const xml = await res.text();
-  const item = extractLatestRssItem(xml, preferKeywords);
-  if (!item || !item.link) throw new Error('No monetary-policy item found in the feed right now');
-
-  // Try to fetch the full press release page for more text than the RSS snippet
-  let fullText = item.description;
   try {
-    const pageRes = await fetchWithTimeout(item.link, {}, 15000);
-    if (pageRes.ok) {
-      const html = await pageRes.text();
-      const bodyText = extractReadableText(html);
-      // Only use it if it's substantially longer than the RSS snippet (i.e. actually got the article)
-      if (bodyText.length > fullText.length * 2) fullText = bodyText.slice(0, 20000);
-    }
-  } catch (e) {
-    // Fall back to RSS description text — not fatal
-  }
-
-  return { title: item.title, link: item.link, pubDate: item.pubDate, text: fullText };
-}
-
-async function summarizeWithGemini(bankName, currency, statement, attempt = 0) {
-  const prompt = `You are analyzing an official central bank statement for an FX trading dashboard. Below is the real text of the latest statement from the ${bankName} (${currency}), published ${statement.pubDate || 'recently'}, titled "${statement.title}".
-
-The text below was scraped from a web page, so it may include menu or footer text; ignore that and analyze only the statement itself. If the statement text itself is genuinely incomplete, say so plainly rather than guessing.
-
-Using ONLY the information in this statement — do not invent facts, numbers, or votes not present in the text — produce a JSON object with this exact shape. Keep every field concise (1-2 short sentences max, never more):
-
-{
-  "the_read": "2-3 sentence plain-English summary of the policy decision and its significance",
-  "what_changed": "1-2 sentences on what changed since the prior statement, if the text indicates this; otherwise null",
-  "vote_split": "e.g. '7-2' if stated in the text, otherwise null",
-  "conviction": "High|Medium|Low based on how decisive/hawkish-or-dovish the language is",
-  "views": {
-    "inflation": "1-2 sentence summary of what the statement says about inflation, or null if not mentioned",
-    "growth": "1-2 sentence summary of what the statement says about growth, or null",
-    "labour": "1-2 sentence summary of what the statement says about the labor market, or null",
-    "risk": "1-2 sentence summary of risks flagged, or null"
+    fs.writeFileSync(file, JSON.stringify({ date: today, snapshot }, null, 2));
+    console.log(`[dataFetcher] Saved daily snapshot: ${file}`);
+  } catch (err) {
+    console.error('[dataFetcher] Failed to write daily snapshot:', err.message);
   }
 }
 
-Respond with ONLY the JSON object, no other text, no markdown fences.
-
-STATEMENT TEXT:
-${statement.text}`;
-
-  const res = await fetchWithTimeout(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 2500 }
-      })
-    },
-    30000
-  );
-
-  if (!res.ok) {
-    const bodyText = await res.text().catch(() => '');
-    if (res.status === 503 && attempt < 4) {
-      await new Promise(r => setTimeout(r, 15000 * (attempt + 1))); // 15s, 30s, 45s, 60s
-      return summarizeWithGemini(bankName, currency, statement, attempt + 1);
-    }
-    throw new Error(`Gemini API HTTP ${res.status}${bodyText ? ' — ' + bodyText.slice(0, 300) : ''}`);
-  }
-  const json = await res.json();
-  const candidate = json.candidates && json.candidates[0];
-  const textPart = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0];
-  if (!textPart || !textPart.text) throw new Error('No text in Gemini response');
-
-  const cleaned = textPart.text.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
-  try {
-    return JSON.parse(cleaned);
-  } catch (e) {
-    // Fallback: extract just the outermost {...} block in case there's stray
-    // text around it (Gemini occasionally adds a preamble despite instructions)
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (match) return JSON.parse(match[0]);
-    throw e;
-  }
-}
-
-async function refreshCentralBankAnalysis(data) {
-  if (!GEMINI_API_KEY) return;
-  console.log('[centralBankAnalysis] Refresh starting:', new Date().toISOString());
-  data.centralBankAnalysis = data.centralBankAnalysis || {};
+async function refreshLiveData(data) {
+  const startedAt = new Date().toISOString();
+  console.log('[dataFetcher] Refresh starting:', startedAt);
   let ok = 0, failed = 0;
   const failures = [];
 
-  let bankIndex = 0;
-  for (const [ccy, bank] of Object.entries(CENTRAL_BANK_FEEDS)) {
-    if (bankIndex > 0) await new Promise(r => setTimeout(r, 4000)); // spread calls out
-    bankIndex++;
+  // --- CPI + unemployment per G10 currency (FRED) ---
+  // Australia and NZ report CPI quarterly, not monthly — everyone else uses
+  // the monthly series (M659N); these two need the quarterly one (Q659N).
+  const QUARTERLY_CPI_COUNTRIES = new Set(['AU', 'NZ', 'JP']);
 
-    if (!bank.url) {
-      failures.push(`${ccy} (no known feed — needs manual URL)`);
-      continue;
-    }
-    try {
-      const statement = await fetchLatestStatementText(bank.url, bank.keywords || []);
-      const analysis = await summarizeWithGemini(bank.name, ccy, statement);
-      data.centralBankAnalysis[ccy] = {
-        ...analysis,
-        source_title: statement.title,
-        source_link: statement.link,
-        source_date: statement.pubDate,
-        generated_at: new Date().toISOString()
-      };
+  for (const [ccy, oecdCode] of Object.entries(CURRENCY_TO_OECD)) {
+    if (!data.g10Data[ccy]) continue;
+
+    const cpiFreq = QUARTERLY_CPI_COUNTRIES.has(oecdCode) ? 'Q' : 'M';
+    const cpi = await fetchFredLatest(`CPALTT01${oecdCode}${cpiFreq}659N`);
+    if (cpi.value !== null) {
+      data.g10Data[ccy].inflation = cpi.value;
+      data.g10Data[ccy].macroData.cpi_yoy = cpi.value;
+      markLive(data, `${ccy}.inflation`);
       ok++;
-    } catch (err) {
-      failed++;
-      failures.push(`${ccy}: ${err.message}`);
-      console.error(`[centralBankAnalysis] ${ccy} (${bank.name}) failed:`, err.message);
+    } else {
+      failed++; failures.push(`${ccy} CPI: ${cpi.error}`);
+    }
+
+    const unemployment = await fetchFredLatest(`LRHUTTTT${oecdCode}Q156S`);
+    if (unemployment.value !== null) {
+      data.g10Data[ccy].macroData.unemployment = unemployment.value;
+      markLive(data, `${ccy}.unemployment`);
+      ok++;
+    } else {
+      failed++; failures.push(`${ccy} unemployment: ${unemployment.error}`);
     }
   }
 
-  data.centralBankAnalysisHealth = { ok, failed, failures, lastRun: new Date().toISOString() };
-  console.log(`[centralBankAnalysis] Refresh complete: ${ok} ok, ${failed} failed/skipped.`);
+  // US GDP growth — kept US-only for now; other countries' FRED growth series
+  // aren't consistent enough in naming to trust without individually verifying each one.
+  const usGdp = await fetchFredLatest('A191RL1Q225SBEA');
+  if (usGdp.value !== null) {
+    data.g10Data.USD.macroData.gdpGrowth = usGdp.value;
+    markLive(data, 'USD.gdpGrowth');
+    ok++;
+  } else {
+    failed++; failures.push(`USD GDP growth: ${usGdp.error}`);
+  }
+
+  // --- FX rates (Frankfurter, no key) ---
+  const fxRates = await fetchFrankfurterRates('USD');
+  if (fxRates.value) {
+    data.fxRates = { base: 'USD', rates: fxRates.value, updated: new Date().toISOString() };
+    ok++;
+  } else {
+    failed++; failures.push(`FX rates: ${fxRates.error}`);
+  }
+
+  // --- Commodities (Twelve Data) ---
+  // Free tier caps at 8 requests/minute, so space calls out instead of firing
+  // them back-to-back — otherwise everything after the first few silently
+  // rate-limits.
+  data.commodities = data.commodities || {};
+  let commodityIndex = 0;
+  for (const [key, symbol] of Object.entries(COMMODITY_SYMBOLS)) {
+    if (commodityIndex > 0) await sleep(8000); // stay under 8 req/min
+    commodityIndex++;
+
+    const price = await fetchTwelveDataPrice(symbol);
+    if (price.value !== null) {
+      data.commodities[key] = { price: price.value, symbol, updated: new Date().toISOString() };
+      ok++;
+    } else {
+      failed++; failures.push(`${key}: ${price.error}`);
+    }
+  }
+
+  data.lastLiveUpdate = new Date().toISOString();
+  data.liveDataHealth = { ok, failed, failures, lastRun: data.lastLiveUpdate };
+
+  saveDailySnapshot(data);
+  console.log(`[dataFetcher] Refresh complete: ${ok} ok, ${failed} failed.`, failed ? `Failed: ${failures.join(', ')}` : '');
 }
 
-function startCentralBankAnalysis(data, intervalHours = 24) {
-  refreshCentralBankAnalysis(data);
-  setInterval(() => refreshCentralBankAnalysis(data), intervalHours * 60 * 60 * 1000);
+function startLiveDataRefresh(data, intervalMinutes = 30) {
+  refreshLiveData(data); // run once immediately on boot
+  setInterval(() => refreshLiveData(data), intervalMinutes * 60 * 1000);
 }
 
-module.exports = { startCentralBankAnalysis, refreshCentralBankAnalysis, CENTRAL_BANK_FEEDS };
+module.exports = { startLiveDataRefresh, refreshLiveData };
