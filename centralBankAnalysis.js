@@ -30,10 +30,24 @@ const CENTRAL_BANK_FEEDS = {
   AUD: { name: 'Reserve Bank of Australia', url: 'https://www.rba.gov.au/rss/rss-cb-media-releases.xml', confidence: 'unverified', keywords: ['cash rate', 'monetary policy'] },
   JPY: { name: 'Bank of Japan', url: null, confidence: 'none', keywords: [] },
   NZD: { name: 'Reserve Bank of New Zealand', url: 'https://www.rbnz.govt.nz/feeds/news', confidence: 'confirmed', keywords: ['official cash rate', 'monetary policy statement', 'monetary policy review'] },
-  CHF: { name: 'Swiss National Bank', url: 'https://www.snb.ch/public/rss/en/news', confidence: 'confirmed', keywords: ['monetary policy', 'policy rate', 'interest rate'] },
+  CHF: { name: 'Swiss National Bank', url: 'https://www.snb.ch/public/rss/en/news', confidence: 'confirmed', keywords: ['monetary policy assessment', 'snb leaves', 'snb raises', 'snb lowers', 'policy rate at'] },
   SEK: { name: 'Sveriges Riksbank', url: null, confidence: 'none', keywords: [] },
   NOK: { name: 'Norges Bank', url: null, confidence: 'none', keywords: [] }
 };
+
+// fetch() has no built-in timeout, so a single hung request (a slow feed, a
+// page that never responds) can freeze this whole daily refresh forever,
+// silently, since everything below awaits one bank at a time. Every network
+// call here goes through this instead of bare fetch().
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function stripHtml(html) {
   return html
@@ -80,7 +94,7 @@ function extractLatestRssItem(xml, preferKeywords = []) {
   if (preferKeywords.length > 0) {
     // Titles that mention the right words but are administrative, not decisions
     // (e.g. "Monetary Policy Committee dates for 2027")
-    const ADMIN_TITLE = /\b(dates|schedule|calendar|timetable|consultation|appoints?|appointment|tender|auction)\b/i;
+    const ADMIN_TITLE = /\b(dates|schedule|calendar|timetable|consultation|appoints?|appointment|tender|auction|data portal|important.*data)\b/i;
     for (const raw of items) {
       const parsed = parseItem(raw);
       if (!parsed.title || ADMIN_TITLE.test(parsed.title)) continue;
@@ -98,7 +112,7 @@ function extractLatestRssItem(xml, preferKeywords = []) {
 }
 
 async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
-  const res = await fetch(feedUrl);
+  const res = await fetchWithTimeout(feedUrl, {}, 15000);
   if (!res.ok) throw new Error(`Feed HTTP ${res.status}`);
   const xml = await res.text();
   const item = extractLatestRssItem(xml, preferKeywords);
@@ -107,7 +121,7 @@ async function fetchLatestStatementText(feedUrl, preferKeywords = []) {
   // Try to fetch the full press release page for more text than the RSS snippet
   let fullText = item.description;
   try {
-    const pageRes = await fetch(item.link);
+    const pageRes = await fetchWithTimeout(item.link, {}, 15000);
     if (pageRes.ok) {
       const html = await pageRes.text();
       const bodyText = extractReadableText(html);
@@ -146,7 +160,7 @@ Respond with ONLY the JSON object, no other text, no markdown fences.
 STATEMENT TEXT:
 ${statement.text}`;
 
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: 'POST',
@@ -155,7 +169,8 @@ ${statement.text}`;
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 2500 }
       })
-    }
+    },
+    30000
   );
 
   if (!res.ok) {
