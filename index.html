@@ -1720,22 +1720,27 @@
 
         function renderCentralBanks() {
             const banks = [
-                { bank: 'Federal Reserve (USD)', rate: '3.50-3.75%', nextMeeting: 'Sep 18', bias: 'HAWKISH', recentSpeech: 'Powell: Inflation sticky, cautious on cuts' },
-                { bank: 'ECB (EUR)', rate: '2.25%', nextMeeting: 'Oct 17', bias: 'DOVISH', recentSpeech: 'Lagarde: Rates plateau, cuts coming Q2 2026' },
-                { bank: 'BoE (GBP)', rate: '5.25%', nextMeeting: 'Sep 19', bias: 'HAWKISH', recentSpeech: 'Bailey: Holding to restrict inflation further' },
-                { bank: 'BoJ (JPY)', rate: '0.00-0.10%', nextMeeting: 'Sep 20', bias: 'ON HOLD', recentSpeech: 'Ueda: Will stay accommodative, no hurry' },
-                { bank: 'RBA (AUD)', rate: '4.10%', nextMeeting: 'Oct 1', bias: 'HAWKISH', recentSpeech: 'Bullock: More time needed, holding steady' },
-                { bank: 'SNB (CHF)', rate: '1.50%', nextMeeting: 'Sep 26', bias: 'HAWKISH', recentSpeech: 'Kohn: Ready to hike if inflation persists' },
+                { code: 'USD', bank: 'Federal Reserve (USD)', rate: '3.50-3.75%', nextMeeting: 'Sep 18', bias: 'HAWKISH', recentSpeech: 'Powell: Inflation sticky, cautious on cuts' },
+                { code: 'EUR', bank: 'ECB (EUR)', rate: '2.25%', nextMeeting: 'Oct 17', bias: 'DOVISH', recentSpeech: 'Lagarde: Rates plateau, cuts coming Q2 2026' },
+                { code: 'GBP', bank: 'BoE (GBP)', rate: '5.25%', nextMeeting: 'Sep 19', bias: 'HAWKISH', recentSpeech: 'Bailey: Holding to restrict inflation further' },
+                { code: 'JPY', bank: 'BoJ (JPY)', rate: '0.00-0.10%', nextMeeting: 'Sep 20', bias: 'ON HOLD', recentSpeech: 'Ueda: Will stay accommodative, no hurry' },
+                { code: 'AUD', bank: 'RBA (AUD)', rate: '4.10%', nextMeeting: 'Oct 1', bias: 'HAWKISH', recentSpeech: 'Bullock: More time needed, holding steady' },
+                { code: 'CAD', bank: 'BoC (CAD)', rate: '4.25%', nextMeeting: 'Oct 23', bias: 'HAWKISH', recentSpeech: 'Macklem: Watching inflation closely' },
+                { code: 'CHF', bank: 'SNB (CHF)', rate: '1.50%', nextMeeting: 'Sep 26', bias: 'HAWKISH', recentSpeech: 'Kohn: Ready to hike if inflation persists' },
+                { code: 'NZD', bank: 'RBNZ (NZD)', rate: '4.25%', nextMeeting: 'Nov 27', bias: 'HAWKISH', recentSpeech: 'Orr: Inflation still above target' },
+                { code: 'SEK', bank: 'Riksbank (SEK)', rate: '3.00%', nextMeeting: 'Nov 5', bias: 'ON HOLD', recentSpeech: 'Thedéen: Balancing growth and inflation' },
+                { code: 'NOK', bank: 'Norges Bank (NOK)', rate: '4.00%', nextMeeting: 'Nov 6', bias: 'HAWKISH', recentSpeech: 'Bache: Rates to stay restrictive' },
             ];
 
             let html = '<h3 style="margin-bottom: 20px;">🏦 Central Banks Rate Comparison & Bias</h3>';
+            html += '<div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 16px;">Rate, bias, next meeting and the quote below are illustrative placeholders, not live. Tap a card for the real statement analysis, where available.</div>';
             html += '<div class="grid">';
-            
+
             for (const bank of banks) {
                 const biasColor = bank.bias === 'HAWKISH' ? 'var(--accent-up)' : bank.bias === 'DOVISH' ? 'var(--accent-down)' : '#f59e0b';
-                
-                html += '<div class="card">';
-                html += '<div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">' + bank.bank + '</div>';
+
+                html += '<div class="card" style="cursor:pointer;" onclick="openCentralBankModal(\'' + bank.code + '\')" title="Tap for real statement analysis">';
+                html += '<div style="font-size: 14px; font-weight: 700; color: var(--accent-purple); margin-bottom: 10px;">' + bank.bank + ' ⓘ</div>';
                 html += '<div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">' + bank.rate + '</div>';
                 html += '<div style="display: flex; gap: 10px; margin-bottom: 10px;">';
                 html += '<span style="background: ' + biasColor + '; color: white; padding: 4px 10px; border-radius: 3px; font-weight: 700; font-size: 10px;">' + bank.bias + '</span>';
@@ -1746,7 +1751,7 @@
                 html += '</div>';
                 html += '</div>';
             }
-            
+
             html += '</div>';
             document.getElementById('centralBanks').innerHTML = html;
         }
